@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>ru.yandex.practicum</groupId>
-    <artifactId>main-service</artifactId>
+    <artifactId>ewm-service</artifactId>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
