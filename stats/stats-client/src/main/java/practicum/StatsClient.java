@@ -7,6 +7,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -16,7 +17,7 @@ public class StatsClient {
 
     public void saveEvent(HttpServletRequest request) {
         StatsDto newEvent = StatsDto.builder().app("ewm-main-service").uri(request.getRequestURI())
-                .ip(request.getRemoteAddr()).timestamp(Timestamp.from(Instant.now())).build();
+                .ip(request.getRemoteAddr()).timestamp(LocalDateTime.now()).build();
         HttpEntity<StatsDto> httpEntity = new HttpEntity<>(newEvent);
         restTemplate.postForObject(statsServiceUrl + "hit", httpEntity, StatsDto.class);
     }

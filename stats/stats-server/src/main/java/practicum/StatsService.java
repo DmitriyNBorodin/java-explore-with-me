@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,10 +28,10 @@ public class StatsService {
     }
 
     public List<GatheredStatsDto> getStatistics(String start, String end, List<String> uris, Boolean unique) {
-        Timestamp startTime = Timestamp.valueOf(URLDecoder.decode(start, StandardCharsets.UTF_8));
-        Timestamp endTime = Timestamp.valueOf(URLDecoder.decode(end, StandardCharsets.UTF_8));
+        LocalDateTime startTime = LocalDateTime.parse(URLDecoder.decode(start, StandardCharsets.UTF_8));
+        LocalDateTime endTime = LocalDateTime.parse(URLDecoder.decode(end, StandardCharsets.UTF_8));
         log.info("Gathering statistics for timegap {} - {}", startTime, endTime);
-        List<StatsDto> requiredDto = statsRepository.getStatsDtoByTimestamp(startTime, endTime);
+        List<StatsDto> requiredDto = statsRepository.getStatsDtoByDateTime(startTime, endTime);
         log.info("Extracted {} dto", requiredDto.size());
         Map<String, List<String>> rawStatistics = requiredDto.stream().collect(groupingBy(StatsDto::getUri))
                 .entrySet().stream()

@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "statistics")
@@ -27,5 +27,5 @@ public class StatsDto {
     private String uri;
     private String ip;
     @Column(name = "created")
-    private Timestamp timestamp;
+    private LocalDateTime timestamp;
 }
