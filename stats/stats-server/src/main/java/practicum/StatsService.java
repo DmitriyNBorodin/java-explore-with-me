@@ -36,7 +36,7 @@ public class StatsService {
         Map<String, List<String>> rawStatistics = requiredDto.stream().collect(groupingBy(StatsDto::getUri))
                 .entrySet().stream()
                 .map(stringListEntry -> new AbstractMap.SimpleEntry<>(stringListEntry.getKey(),
-                        stringListEntry.getValue().stream().map(StatsDto::getIp).toList()))
+                        stringListEntry.getValue().stream().map(StatsDto::getIp).collect(Collectors.toList())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         Map<String, List<String>> filteredByUriStatistics;
         List<GatheredStatsDto> statisticsList;
@@ -49,10 +49,12 @@ public class StatsService {
         }
         if (unique) {
             statisticsList = filteredByUriStatistics.entrySet().stream()
-                    .map(entry -> new GatheredStatsDto(app, entry.getKey(), new HashSet<>(entry.getValue()).size())).toList();
+                    .map(entry -> new GatheredStatsDto(app, entry.getKey(), new HashSet<>(entry.getValue()).size()))
+                    .collect(Collectors.toList());
         } else {
             statisticsList = filteredByUriStatistics.entrySet().stream()
-                    .map(entry -> new GatheredStatsDto(app, entry.getKey(), entry.getValue().size())).toList();
+                    .map(entry -> new GatheredStatsDto(app, entry.getKey(), entry.getValue().size()))
+                    .collect(Collectors.toList());
         }
         return statisticsList;
     }
