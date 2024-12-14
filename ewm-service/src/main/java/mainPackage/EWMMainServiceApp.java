@@ -1,4 +1,4 @@
-package main_package;
+package mainPackage;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
