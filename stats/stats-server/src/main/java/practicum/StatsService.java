@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.AbstractMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,8 +31,14 @@ public class StatsService {
     }
 
     public List<GatheredStatsDto> getStatistics(String start, String end, List<String> uris, Boolean unique) {
-        LocalDateTime startTime = LocalDateTime.parse(URLDecoder.decode(start, StandardCharsets.UTF_8));
-        LocalDateTime endTime = LocalDateTime.parse(URLDecoder.decode(end, StandardCharsets.UTF_8));
+        DateTimeFormatter dTF =
+                new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd[ [HH][:mm][:ss][.SSS]]")
+                        .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+                        .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
+                        .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+                        .toFormatter();
+        LocalDateTime startTime = LocalDateTime.parse(URLDecoder.decode(start, StandardCharsets.UTF_8), dTF);
+        LocalDateTime endTime = LocalDateTime.parse(URLDecoder.decode(end, StandardCharsets.UTF_8), dTF);
         log.info("Gathering statistics for timegap {} - {}", startTime, endTime);
         List<StatsDto> requiredDto = statsRepository.getStatsDtoByDateTime(startTime, endTime);
         log.info("Extracted {} dto", requiredDto.size());
