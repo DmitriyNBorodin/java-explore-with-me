@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.AbstractMap;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,10 +60,12 @@ public class StatsService {
         if (unique) {
             statisticsList = filteredByUriStatistics.entrySet().stream()
                     .map(entry -> new GatheredStatsDto(app, entry.getKey(), new HashSet<>(entry.getValue()).size()))
+                    .sorted(Comparator.comparing(GatheredStatsDto::getHits).reversed())
                     .collect(Collectors.toList());
         } else {
             statisticsList = filteredByUriStatistics.entrySet().stream()
                     .map(entry -> new GatheredStatsDto(app, entry.getKey(), entry.getValue().size()))
+                    .sorted(Comparator.comparing(GatheredStatsDto::getHits).reversed())
                     .collect(Collectors.toList());
         }
         return statisticsList;
