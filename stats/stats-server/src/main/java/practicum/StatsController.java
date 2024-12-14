@@ -15,15 +15,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StatsController {
     private final StatsService statsService;
-@PostMapping("/hit")
-    public StatsDto saveEvent(@RequestBody StatsDto newEvent) {
-    return statsService.saveEvent(newEvent);
-}
 
-@GetMapping("/stats")
+    @PostMapping("/hit")
+    public StatsDto saveEvent(@RequestBody StatsDto newEvent) {
+        return statsService.saveEvent(newEvent);
+    }
+
+    @GetMapping("/stats")
     public List<GatheredStatsDto> getStatistics(@RequestParam String start, @RequestParam String end,
                                                 @RequestParam(required = false) List<String> uris,
                                                 @RequestParam(defaultValue = "false") Boolean unique) {
-    return statsService.getStatistics(start, end, uris, unique);
-}
+        return statsService.getStatistics(start, end, uris, unique);
+    }
 }
