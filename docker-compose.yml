@@ -24,23 +24,23 @@ services:
       - POSTGRES_DB=statistics
 
 
-#  ewm-service:
-#    build: evm-service
-#    image: evm-service-image
-#    container_name: evm-service-container
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      - evm-db
-#
-#  ewm-db:
-#    image: postgres:16.1
-#    container_name: stats-db-container
-#    ports:
-#      - "6532:5432"
-#    environment:
-#      - POSTGRES_PASSWORD=12345
-#        - POSTGRES_USER=db_user
-#        - POSTGRES_DB=explore_db
+  ewm-service:
+    build: evm-service
+    image: evm-service-image
+    container_name: evm-service-container
+    ports:
+      - "8080:8080"
+    depends_on:
+      - evm-db
+
+  ewm-db:
+    image: postgres:16.1
+    container_name: stats-db-container
+    ports:
+      - "6532:5432"
+    environment:
+      - POSTGRES_PASSWORD=12345
+        - POSTGRES_USER=db_user
+        - POSTGRES_DB=explore_db
 
 

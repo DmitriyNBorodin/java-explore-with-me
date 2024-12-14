@@ -1,6 +1,5 @@
 package practicum;
 
-import jakarta.persistence.Entity;
 import lombok.Data;
 
 @Data
