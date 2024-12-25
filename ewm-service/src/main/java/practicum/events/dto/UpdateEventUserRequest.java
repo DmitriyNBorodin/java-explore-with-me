@@ -7,7 +7,6 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import practicum.events.states.StateAction;
-import practicum.util.NullOrNotBlank;
 
 import java.time.LocalDateTime;
 

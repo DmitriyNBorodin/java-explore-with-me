@@ -85,7 +85,7 @@ public class CompilationsService {
     }
 
     private CompilationDao updateCompilationFields(CompilationDao updatingCompilation, UpdateCompilationDto updateRequest) {
-        if(updateRequest.getPinned() != null) {
+        if (updateRequest.getPinned() != null) {
             updatingCompilation.setPinned(updateRequest.getPinned());
         }
         if (updateRequest.getTitle() != null) {
@@ -95,6 +95,6 @@ public class CompilationsService {
             List<EventDao> newEventList = eventRepository.findEventDaoByIdIn(updateRequest.getEvents());
             updatingCompilation.setEvents(newEventList);
         }
-        return  updatingCompilation;
+        return updatingCompilation;
     }
 }

@@ -12,6 +12,7 @@ public interface RequestsRepository extends JpaRepository<ParticipationRequestDt
     List<ParticipationRequestDto> findParticipationRequestDtoByEvent(Long event);
 
     Optional<ParticipationRequestDto> findParticipationRequestDtoById(Long id);
+
     List<ParticipationRequestDto> findParticipationRequestDtoByIdIn(List<Long> id);
 
     List<ParticipationRequestDto> findParticipationRequestDtoByEventIn(List<Long> event);

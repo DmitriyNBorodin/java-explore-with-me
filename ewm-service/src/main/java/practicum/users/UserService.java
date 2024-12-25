@@ -3,7 +3,6 @@ package practicum.users;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import practicum.users.dto.NewUserDto;
 import practicum.users.dto.UserDto;
 import practicum.users.dto.UserShortDto;

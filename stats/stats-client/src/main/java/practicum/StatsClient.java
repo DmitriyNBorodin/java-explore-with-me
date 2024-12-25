@@ -30,7 +30,7 @@ public class StatsClient {
     private final String statsServiceHost = "localhost";
     private final int statsServicePort = 9090;
     private final String statsServiceScheme = "http";
-    final static DateTimeFormatter CUSTOM_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public void saveEvent(HttpServletRequest request, String app) {
         StatsDto newEvent = StatsDto.builder().app(app).uri(request.getRequestURI())
@@ -45,7 +45,7 @@ public class StatsClient {
         } catch (URISyntaxException e) {
             throw new RuntimeException("Не удалось сохранить событие");
         }
-        log.info("Событие {} сохраняется по запросу {}",httpEntity, uri);
+        log.info("Событие {} сохраняется по запросу {}", httpEntity, uri);
         restTemplate.postForObject(uri, httpEntity, StatsDto.class);
     }
 
@@ -56,14 +56,14 @@ public class StatsClient {
             paramList.add(new BasicNameValuePair("uris", "/events/" + eventId));
         }
         if (start != null) {
-            String encodedStart = URLEncoder.encode(start.format(CUSTOM_FORMATTER), StandardCharsets.UTF_8);
+            String encodedStart = URLEncoder.encode(start.format(customFormatter), StandardCharsets.UTF_8);
             paramList.add(new BasicNameValuePair("start", encodedStart));
         }
         if (end != null) {
-            String encodedEnd = URLEncoder.encode(end.format(CUSTOM_FORMATTER), StandardCharsets.UTF_8);
+            String encodedEnd = URLEncoder.encode(end.format(customFormatter), StandardCharsets.UTF_8);
             paramList.add(new BasicNameValuePair("end", encodedEnd));
         }
-        if(unique != null && unique.equals("true")) {
+        if (unique != null && unique.equals("true")) {
             paramList.add(new BasicNameValuePair("unique", unique));
         }
         URI uri;

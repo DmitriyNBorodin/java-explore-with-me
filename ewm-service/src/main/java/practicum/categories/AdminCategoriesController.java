@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AdminCategoriesController {
     private final CategoriesService categoriesService;
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto addNewCategory(@RequestBody @Validated NewCategoryDto newCategory) {

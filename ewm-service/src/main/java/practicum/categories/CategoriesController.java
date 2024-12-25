@@ -15,6 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoriesController {
     private final CategoriesService categoriesService;
+
     @GetMapping
     public List<CategoryDto> getAllCategories(@RequestParam(defaultValue = "0") String from, @RequestParam(defaultValue = "10") String size) {
         return categoriesService.getAllCategories(from, size);

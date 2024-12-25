@@ -11,8 +11,6 @@ import practicum.events.states.SortOption;
 import practicum.util.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
