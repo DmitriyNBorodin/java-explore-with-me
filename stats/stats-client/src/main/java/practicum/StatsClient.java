@@ -27,7 +27,7 @@ import java.util.List;
 @Slf4j
 public class StatsClient {
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String statsServiceHost = "localhost";
+    private final String statsHost = "stats-server";
     private final int statsServicePort = 9090;
     private final String statsServiceScheme = "http";
     private final DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -38,14 +38,14 @@ public class StatsClient {
         HttpEntity<StatsDto> httpEntity = new HttpEntity<>(newEvent);
         URI uri;
         try {
-            uri = new URIBuilder().setHost(statsServiceHost)
+            uri = new URIBuilder().setHost(statsHost)
                     .setPort(statsServicePort)
                     .setScheme(statsServiceScheme)
                     .setPath("/hit").build();
         } catch (URISyntaxException e) {
             throw new RuntimeException("Не удалось сохранить событие");
         }
-        log.info("Событие {} сохраняется по запросу {}", httpEntity, uri);
+        log.info("Событие {} сохраняется по запросу c uri={}", httpEntity, uri);
         restTemplate.postForObject(uri, httpEntity, StatsDto.class);
     }
 
@@ -68,7 +68,7 @@ public class StatsClient {
         }
         URI uri;
         try {
-            uri = new URIBuilder().setHost(statsServiceHost)
+            uri = new URIBuilder().setHost(statsHost)
                     .setPort(statsServicePort)
                     .setScheme(statsServiceScheme)
                     .setPath("/stats")
@@ -76,7 +76,8 @@ public class StatsClient {
         } catch (URISyntaxException e) {
             throw new RuntimeException("Не удалось получить статистику");
         }
-        ResponseEntity<GatheredStatsDto[]> statistics = restTemplate.exchange(uri, HttpMethod.GET, new HttpEntity<>(new GatheredStatsDto()), GatheredStatsDto[].class);
+        log.info("Получение статистики по uri {}", uri);
+        ResponseEntity<GatheredStatsDto[]> statistics = restTemplate.getForEntity(uri, GatheredStatsDto[].class);
         return Arrays.stream(statistics.getBody()).toList();
     }
 }

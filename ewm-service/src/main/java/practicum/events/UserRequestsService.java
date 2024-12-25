@@ -1,6 +1,7 @@
 package practicum.events;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import practicum.events.dto.EventDao;
 import practicum.events.dto.ParticipationRequestDto;
 import practicum.events.states.EventState;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserRequestsService {
     private final RequestsRepository requestsRepository;
     private final EventRepository eventRepository;
@@ -29,6 +31,7 @@ public class UserRequestsService {
         EventDao eventToParticipate = eventRepository.findEventDaoById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException("Не удалось получить данные о событии с id=" + eventId));
         List<ParticipationRequestDto> participationRequests = requestsRepository.findParticipationRequestDtoByEvent(eventId);
+        log.info("Добавление заявки на участие пользователя id={} в событии id={}", userId, eventId);
         if (participationRequests.stream().map(ParticipationRequestDto::getRequester).collect(Collectors.toSet()).contains(userId)) {
             throw new ForbiddenActionException("Request already created");
         } else if (eventToParticipate.getInitiator().getId().equals(userId)) {
@@ -46,7 +49,8 @@ public class UserRequestsService {
                 .created(LocalDateTime.now())
                 .status(RequestState.PENDING)
                 .build();
-        if (eventToParticipate.getParticipantLimit() == 0) newParticipationRequest.setStatus(RequestState.CONFIRMED);
+        if (eventToParticipate.getParticipantLimit() == 0 || !eventToParticipate.getRequestModeration()) newParticipationRequest.setStatus(RequestState.CONFIRMED);
+        log.info("Создана заявка на участие {}", newParticipationRequest);
         return requestsRepository.save(newParticipationRequest);
     }
 
