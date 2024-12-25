@@ -45,7 +45,7 @@ services:
       - "6532:5432"
     environment:
       - POSTGRES_PASSWORD=12345
-        - POSTGRES_USER=db_user
-        - POSTGRES_DB=explore_db
+      - POSTGRES_USER=db_user
+      - POSTGRES_DB=explore_db
 
 

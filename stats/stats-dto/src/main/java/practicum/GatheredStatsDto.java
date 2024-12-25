@@ -1,10 +1,14 @@
 package practicum;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class GatheredStatsDto {
-    private final String app;
-    private final String uri;
-    private final long hits;
+    private String app;
+    private String uri;
+    private long hits;
 }
