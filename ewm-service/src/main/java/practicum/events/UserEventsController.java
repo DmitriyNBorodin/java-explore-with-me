@@ -8,7 +8,7 @@ import practicum.events.dto.EventRequestStatusUpdateRequest;
 import practicum.events.dto.EventRequestStatusUpdateResult;
 import practicum.events.dto.EventShortDto;
 import practicum.events.dto.NewEventDto;
-import practicum.events.dto.ParticipationRequestDto;
+import practicum.events.dto.ParticipationRequestDao;
 import practicum.events.dto.UpdateEventUserRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +54,7 @@ public class UserEventsController {
     }
 
     @GetMapping("/{eventId}/requests")
-    public List<ParticipationRequestDto> getUserEventRequests(@PathVariable Long userId, @PathVariable Long eventId) {
+    public List<ParticipationRequestDao> getUserEventRequests(@PathVariable Long userId, @PathVariable Long eventId) {
         return userEventsService.getUserEventRequests(userId, eventId);
     }
 

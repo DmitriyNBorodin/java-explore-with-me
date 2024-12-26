@@ -83,7 +83,7 @@ public class AdminEventService {
         eventRepository.save(updatedEvent);
         log.info("Обновлено событие {}", updatedEvent);
         EventFullDto updatedEventDto = eventDtoMapper.assembleEventFullDto(updatedEvent);
-        return eventDtoMapper.assignViewsAndRequests(Collections.singletonList(updatedEventDto)).getFirst();
+        return eventDtoMapper.assignViewsAndRequests(updatedEventDto);
     }
 
     private EventDao updateEventDaoFieldsByAdmin(EventDao updatingEvent, UpdateEventAdminRequest updateRequest) {
@@ -91,7 +91,7 @@ public class AdminEventService {
             updatingEvent.setAnnotation(updateRequest.getAnnotation());
         }
         if (updateRequest.getCategory() != null) {
-            updatingEvent.setCategory(categoriesService.getCategoryById(updateRequest.getCategory()));
+            updatingEvent.setCategory(categoriesService.getCategoryDaoById(updateRequest.getCategory()));
         }
         if (updateRequest.getDescription() != null) {
             updatingEvent.setDescription(updateRequest.getDescription());

@@ -3,7 +3,6 @@ package practicum.users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import practicum.users.dto.NewUserDto;
-import practicum.users.dto.UserDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import practicum.users.dto.UserDto;
 
 import java.util.List;
 

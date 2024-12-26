@@ -75,10 +75,12 @@ public class EventService {
         if (onlyAvailable) {
             eventStream = eventStream.filter(eventDto -> eventDto.getParticipantLimit() != 0 && eventDto.getConfirmedRequests() < eventDto.getParticipantLimit());
         }
-        if (paid != null && paid) {
-            eventStream = eventStream.filter(EventFullDto::getPaid);
-        } else if (paid != null && !paid) {
-            eventStream = eventStream.filter(eventDto -> !eventDto.getPaid());
+        if (paid != null) {
+            if (paid) {
+                eventStream = eventStream.filter(EventFullDto::getPaid);
+            } else {
+                eventStream = eventStream.filter(eventDto -> !eventDto.getPaid());
+            }
         }
         if (sort.equals(SortOption.EVENT_DATE)) {
             eventStream = eventStream.sorted(Comparator.comparing(EventFullDto::getEventDate).reversed());
@@ -97,6 +99,6 @@ public class EventService {
             throw new ObjectNotFoundException("Событие с id=" + eventId + " недоступно");
         }
         EventFullDto requiredEvent = eventDtoMapper.assembleEventFullDto(requiredEventDao);
-        return eventDtoMapper.assignViewsAndRequests(Collections.singletonList(requiredEvent)).getFirst();
+        return eventDtoMapper.assignViewsAndRequests(requiredEvent);
     }
 }

@@ -11,7 +11,7 @@ import practicum.events.dto.EventRequestStatusUpdateRequest;
 import practicum.events.dto.EventRequestStatusUpdateResult;
 import practicum.events.dto.EventShortDto;
 import practicum.events.dto.NewEventDto;
-import practicum.events.dto.ParticipationRequestDto;
+import practicum.events.dto.ParticipationRequestDao;
 import practicum.events.dto.UpdateEventUserRequest;
 import practicum.events.states.EventState;
 import practicum.events.states.RequestState;
@@ -76,11 +76,11 @@ public class UserEventsService {
         EventDao updatedEvent = updateEventDaoFieldsByUser(eventToUpdate, updateRequest);
         eventRepository.save(updatedEvent);
         EventFullDto requiredEventDto = eventDtoMapper.assembleEventFullDto(updatedEvent);
-        return eventDtoMapper.assignViewsAndRequests(Collections.singletonList(requiredEventDto)).getFirst();
+        return eventDtoMapper.assignViewsAndRequests(requiredEventDto);
     }
 
     @Transactional
-    public List<ParticipationRequestDto> getUserEventRequests(Long userId, Long eventId) {
+    public List<ParticipationRequestDao> getUserEventRequests(Long userId, Long eventId) {
         validateUserEventAndGetLimit(userId, eventId);
         return requestsRepository.findParticipationRequestDtoByEvent(eventId);
     }
@@ -90,11 +90,11 @@ public class UserEventsService {
         Long eventParticipantsLimit = validateUserEventAndGetLimit(userId, eventId);
         EventRequestStatusUpdateResult result = new EventRequestStatusUpdateResult();
         long willBeConfirmed = 0L;
-        List<ParticipationRequestDto> requestsToUpdateList = requestsRepository.findParticipationRequestDtoByIdIn(updateRequest.getRequestIds());
+        List<ParticipationRequestDao> requestsToUpdateList = requestsRepository.findParticipationRequestDtoByIdIn(updateRequest.getRequestIds());
         if (requestsToUpdateList.stream().anyMatch(request -> !request.getStatus().equals(RequestState.PENDING))) {
             throw new ForbiddenActionException("Only pending requests available for updating");
         }
-        List<ParticipationRequestDto> eventRequestsList = requestsRepository.findParticipationRequestDtoByEvent(eventId);
+        List<ParticipationRequestDao> eventRequestsList = requestsRepository.findParticipationRequestDtoByEvent(eventId);
         if (updateRequest.getStatus().equals(RequestState.CONFIRMED)) {
             willBeConfirmed = eventRequestsList.stream().filter(request -> request.getStatus().equals(RequestState.CONFIRMED)).count()
                               + updateRequest.getRequestIds().size();
@@ -102,21 +102,21 @@ public class UserEventsService {
         if (updateRequest.getStatus().equals(RequestState.CONFIRMED) && eventParticipantsLimit != 0 && willBeConfirmed > eventParticipantsLimit) {
             throw new ForbiddenActionException("Participants limit has been reached");
         }
-        List<ParticipationRequestDto> listOfUpdatingRequests = requestsToUpdateList.stream()
+        List<ParticipationRequestDao> listOfUpdatingRequests = requestsToUpdateList.stream()
                 .peek(request -> request.setStatus(updateRequest.getStatus())).toList();
         requestsRepository.saveAll(listOfUpdatingRequests);
         if (updateRequest.getStatus().equals(RequestState.REJECTED)) {
-            result.setRejectedRequests(listOfUpdatingRequests);
+            result.setRejectedRequests(listOfUpdatingRequests.stream().map(eventDtoMapper::convertParticipationRequestToDto).toList());
         }
         if (updateRequest.getStatus().equals(RequestState.CONFIRMED)) {
-            result.setConfirmedRequests(listOfUpdatingRequests);
+            result.setConfirmedRequests(listOfUpdatingRequests.stream().map(eventDtoMapper::convertParticipationRequestToDto).toList());
             if (willBeConfirmed == eventParticipantsLimit) {
-                List<ParticipationRequestDto> listOfSpareRequests = eventRequestsList.stream()
+                List<ParticipationRequestDao> listOfSpareRequests = eventRequestsList.stream()
                         .filter(request -> !updateRequest.getRequestIds().contains(request.getId()))
                         .filter(request -> !request.getStatus().equals(RequestState.CONFIRMED))
                         .peek(request -> request.setStatus(RequestState.REJECTED)).toList();
                 requestsRepository.saveAll(listOfSpareRequests);
-                result.setRejectedRequests(listOfSpareRequests);
+                result.setRejectedRequests(listOfSpareRequests.stream().map(eventDtoMapper::convertParticipationRequestToDto).toList());
             }
         }
         return result;
@@ -127,7 +127,7 @@ public class UserEventsService {
             updatingEvent.setAnnotation(updateRequest.getAnnotation());
         }
         if (updateRequest.getCategory() != null) {
-            updatingEvent.setCategory(categoriesService.getCategoryById(updateRequest.getCategory()));
+            updatingEvent.setCategory(categoriesService.getCategoryDaoById(updateRequest.getCategory()));
         }
         if (updateRequest.getDescription() != null) {
             updatingEvent.setDescription(updateRequest.getDescription());

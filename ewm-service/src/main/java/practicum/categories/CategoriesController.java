@@ -1,12 +1,12 @@
 package practicum.categories;
 
 import lombok.RequiredArgsConstructor;
-import practicum.categories.dto.CategoryDto;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import practicum.categories.dto.CategoryDto;
 
 import java.util.List;
 
@@ -23,6 +23,6 @@ public class CategoriesController {
 
     @GetMapping("/{catId}")
     public CategoryDto getCategoryById(@PathVariable Long catId) {
-        return categoriesService.getCategoryById(catId);
+        return categoriesService.getCategoryDtoById(catId);
     }
 }

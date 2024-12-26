@@ -3,15 +3,18 @@ package practicum.events.dto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import practicum.categories.CategoriesService;
+import practicum.categories.dto.CategoryDtoMapper;
 import practicum.events.RequestsRepository;
 import practicum.events.states.EventState;
 import practicum.events.states.RequestState;
 import practicum.users.UserService;
 import practicum.GatheredStatsDto;
 import practicum.StatsClient;
+import practicum.users.dto.UserDtoMapper;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -24,6 +27,8 @@ public class EventDtoMapper {
     private final CategoriesService categoriesService;
     private final StatsClient statsClient;
     private final RequestsRepository requestsRepository;
+    private final CategoryDtoMapper categoryDtoMapper;
+    private final UserDtoMapper userDtoMapper;
 
     public EventDao assembleNewEventDao(Long userId, NewEventDto newEventDto) {
         return EventDao.builder()
@@ -32,7 +37,7 @@ public class EventDtoMapper {
                 .createdOn(LocalDateTime.now())
                 .description(newEventDto.getDescription())
                 .eventDate(newEventDto.getEventDate())
-                .initiator(userService.getUserDtoById(userId))
+                .initiator(userService.getUserDaoById(userId))
                 .lat(newEventDto.getLocation().getLat())
                 .lon(newEventDto.getLocation().getLon())
                 .paid(newEventDto.getPaid())
@@ -48,11 +53,11 @@ public class EventDtoMapper {
         return EventFullDto.builder()
                 .id(eventDao.getId())
                 .annotation(eventDao.getAnnotation())
-                .category(eventDao.getCategory())
+                .category(categoryDtoMapper.convertCategoryDaoToDto(eventDao.getCategory()))
                 .createdOn(eventDao.getCreatedOn())
                 .description(eventDao.getDescription())
                 .eventDate(eventDao.getEventDate())
-                .initiator(userService.convertToShortDto(eventDao.getInitiator()))
+                .initiator(userDtoMapper.convertToShortDto(eventDao.getInitiator()))
                 .location(new Location(eventDao.getLat(), eventDao.getLon()))
                 .paid(eventDao.getPaid())
                 .participantLimit(eventDao.getParticipantLimit())
@@ -69,14 +74,18 @@ public class EventDtoMapper {
         return EventShortDto.builder()
                 .id(eventDao.getId())
                 .annotation(eventDao.getAnnotation())
-                .category(eventDao.getCategory())
+                .category(categoryDtoMapper.convertCategoryDaoToDto(eventDao.getCategory()))
                 .confirmedRequests(0)
                 .eventDate(eventDao.getEventDate())
-                .initiator(userService.convertToShortDto(eventDao.getInitiator()))
+                .initiator(userDtoMapper.convertToShortDto(eventDao.getInitiator()))
                 .paid(eventDao.getPaid())
                 .title(eventDao.getTitle())
                 .views(0L)
                 .build();
+    }
+
+    public <T extends EventShortDto> T assignViewsAndRequests(T eventDto) {
+        return assignViewsAndRequests(Collections.singletonList(eventDto)).getFirst();
     }
 
     public <T extends EventShortDto> List<T> assignViewsAndRequests(List<T> eventDto) {
@@ -86,10 +95,10 @@ public class EventDtoMapper {
             List<Long> eventIdList = eventDto.stream().map(EventShortDto::getId).collect(Collectors.toList());
             List<GatheredStatsDto> statsList = statsClient.getStatistics(eventIdList, LocalDateTime.now().minusYears(50),
                     LocalDateTime.now(), "true");
-            List<ParticipationRequestDto> requestsOfEvents = requestsRepository.findParticipationRequestDtoByEventIn(eventIdList);
+            List<ParticipationRequestDao> requestsOfEvents = requestsRepository.findParticipationRequestDtoByEventIn(eventIdList);
             Map<Long, Long> mapOfConfirmedRequests = requestsOfEvents.stream()
                     .filter(request -> request.getStatus().equals(RequestState.CONFIRMED))
-                    .collect(Collectors.groupingBy(ParticipationRequestDto::getEvent, Collectors.counting()));
+                    .collect(Collectors.groupingBy(ParticipationRequestDao::getEvent, Collectors.counting()));
             for (GatheredStatsDto statsDto : statsList) {
                 String[] splittedUri = statsDto.getUri().split("/");
                 if (splittedUri.length == 3) {
@@ -117,6 +126,16 @@ public class EventDtoMapper {
                 .paid(fullDto.getPaid())
                 .title(fullDto.getTitle())
                 .views(fullDto.getViews())
+                .build();
+    }
+
+    public ParticipationRequestDto convertParticipationRequestToDto(ParticipationRequestDao participationRequestDao) {
+        return ParticipationRequestDto.builder()
+                .id(participationRequestDao.getId())
+                .created(participationRequestDao.getCreated())
+                .event(participationRequestDao.getEvent())
+                .requester(participationRequestDao.getRequester())
+                .status(participationRequestDao.getStatus())
                 .build();
     }
 }

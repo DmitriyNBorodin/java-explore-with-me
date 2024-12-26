@@ -4,8 +4,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import practicum.users.dto.NewUserDto;
+import practicum.users.dto.UserDao;
 import practicum.users.dto.UserDto;
-import practicum.users.dto.UserShortDto;
+import practicum.users.dto.UserDtoMapper;
 import practicum.util.AdditionalEmailValidationException;
 import practicum.util.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.List;
 @Slf4j
 public class UserService {
     private final UserRepository userRepository;
+    private final UserDtoMapper userDtoMapper;
 
     public List<UserDto> getUsers(List<String> ids, String from, String size) {
         log.info("Поиск пользователей по параметрам ids={}, from={}, size={}", ids, from, size);
@@ -26,35 +28,28 @@ public class UserService {
         if (ids != null) {
             idsLong = ids.stream().map(Long::parseLong).toList();
         }
-        List<UserDto> requiredUsers = userRepository.getUserDtoByIdList(idsLong, fromLong, sizeLong);
+        List<UserDao> requiredUsers = userRepository.getUserDaoByIdList(idsLong, fromLong, sizeLong);
         log.info("Получены пользователи {}", requiredUsers);
-        return requiredUsers;
+        return requiredUsers.stream().map(userDtoMapper::convertToUserDto).toList();
     }
 
     public UserDto addNewUser(NewUserDto newUser) {
         log.info("Добавление пользователя {}", newUser);
         additionEmailValidation(newUser);
-        return userRepository.save(convertToUserDto(newUser));
+        UserDao savedUser = userRepository.save(userDtoMapper.assambleNewUserDao(newUser));
+        return userDtoMapper.convertToUserDto(savedUser);
     }
 
     @Transactional
     public void deleteUserById(Long userId) {
-        if (userRepository.getUserDtoById(userId).isEmpty())
+        if (userRepository.getUserDaoById(userId).isEmpty())
             throw new ObjectNotFoundException("User with id=" + userId + " was not found");
-        userRepository.deleteUserDtoById(userId);
+        userRepository.deleteUserDaoById(userId);
     }
 
-    public UserDto getUserDtoById(Long userId) {
-        return userRepository.getUserDtoById(userId).orElseThrow(
+    public UserDao getUserDaoById(Long userId) {
+        return userRepository.getUserDaoById(userId).orElseThrow(
                 () -> new ObjectNotFoundException("User with id=" + userId + " was not found"));
-    }
-
-    private UserDto convertToUserDto(NewUserDto newUserDto) {
-        return UserDto.builder().name(newUserDto.getName()).email(newUserDto.getEmail()).build();
-    }
-
-    public UserShortDto convertToShortDto(UserDto userDto) {
-        return new UserShortDto(userDto.getName(), userDto.getId());
     }
 
     private void additionEmailValidation(NewUserDto newUserDto) {

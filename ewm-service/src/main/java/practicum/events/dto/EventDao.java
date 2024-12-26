@@ -18,10 +18,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import practicum.categories.dto.CategoryDto;
+import practicum.categories.dto.CategoryDao;
 import practicum.compilations.dto.CompilationDao;
 import practicum.events.states.EventState;
-import practicum.users.dto.UserDto;
+import practicum.users.dto.UserDao;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,14 +40,14 @@ public class EventDao {
     String annotation;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category")
-    CategoryDto category;
+    CategoryDao category;
     LocalDateTime createdOn;
     String description;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime eventDate;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "initiator")
-    UserDto initiator;
+    UserDao initiator;
     Float lat;
     Float lon;
     Boolean paid;
