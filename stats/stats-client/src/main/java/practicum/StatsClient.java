@@ -26,8 +26,7 @@ import java.util.List;
 @Slf4j
 public class StatsClient {
     private final RestTemplate restTemplate = new RestTemplate();
-//    private final String statsHost = "stats-server";
-    private final String statsHost = "localhost";
+    private final String statsHost = "stats-server";
     private final int statsServicePort = 9090;
     private final String statsServiceScheme = "http";
     private final DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
