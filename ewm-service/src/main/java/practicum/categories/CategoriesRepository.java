@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CategoriesRepository extends JpaRepository<Category, Long> {
-    @Query("select c from CategoryDao as c order by c.id offset ?1 rows fetch next ?2 rows only")
+    @Query("select c from Category as c order by c.id offset ?1 rows fetch next ?2 rows only")
     List<Category> getAllCategoryDao(Long from, Long size);
 
     Optional<Category> getCategoryDaoById(Long id);

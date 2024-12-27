@@ -15,7 +15,7 @@ public interface CompilationsRepository extends JpaRepository<Compilation, Long>
 
     Optional<Compilation> findCompilationDaoById(Long id);
 
-    @Query("select c from CompilationDao as c where coalesce(:pinned, c.pinned) = c.pinned " +
+    @Query("select c from Compilation as c where coalesce(:pinned, c.pinned) = c.pinned " +
            "order by c.id offset :from rows fetch next :size rows only")
     List<Compilation> findAllCompilations(@Param("pinned") Boolean pinned, @Param("from") Long from,
                                           @Param("size") Long size);

@@ -18,14 +18,14 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     Optional<Event> findEventDaoById(Long eventId);
 
-    @Query("select ed from EventDao as ed join ed.initiator as u join ed.category as c where u.id in (coalesce(:userIds, u.id)) and " +
+    @Query("select ed from Event as ed join ed.initiator as u join ed.category as c where u.id in (coalesce(:userIds, u.id)) and " +
            "ed.state in (coalesce(:states, ed.state)) and c.id in (coalesce(:categoriesIds, c.id)) and ed.eventDate between" +
            " :start and :end order by ed.id offset :from rows fetch next :size rows only")
     List<Event> findAllEventDaoByAdmin(@Param("userIds") List<Long> userIds, @Param("states") List<EventState> states,
                                        @Param("categoriesIds") List<Long> categoriesIds, @Param("start") LocalDateTime start,
                                        @Param("end") LocalDateTime end, @Param("from") Long from, @Param("size") Long size);
 
-    @Query("select ed from EventDao as ed join ed.category as c where (coalesce(%:text%, ed.description) ilike ed.description " +
+    @Query("select ed from Event as ed join ed.category as c where (coalesce(%:text%, ed.description) ilike ed.description " +
            "or coalesce(%:text%, ed.annotation) ilike ed.annotation) and c.id in (coalesce(:categoriesIds, c.id)) and ed.eventDate " +
            "between :start and :end order by ed.id offset :from rows fetch next :size rows only")
     List<Event> findAllEventDaoByAnyone(@Param("text") String text, @Param("categoriesIds") List<Long> categoriesIds,
