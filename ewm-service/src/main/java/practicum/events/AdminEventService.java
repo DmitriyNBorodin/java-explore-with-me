@@ -4,7 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import practicum.categories.CategoriesService;
-import practicum.events.dto.EventDao;
+import practicum.events.dto.Event;
 import practicum.events.dto.EventDtoMapper;
 import practicum.events.dto.EventFullDto;
 import practicum.events.dto.UpdateEventAdminRequest;
@@ -66,7 +66,7 @@ public class AdminEventService {
         }
         log.info("Получение событий администратором по параметрам userIds={}, states={}, categoriesId={}, start={}, end={}, from={}, size={}",
                 userIds, states, categoriesIds, start, end, from, size);
-        List<EventDao> requiredEvents = eventRepository.findAllEventDaoByAdmin(userIds, states, categoriesIds, start, end, from, size);
+        List<Event> requiredEvents = eventRepository.findAllEventDaoByAdmin(userIds, states, categoriesIds, start, end, from, size);
         log.info("Получено {} событий", requiredEvents.size());
         List<EventFullDto> requiredEventsDto = requiredEvents.stream().map(eventDtoMapper::assembleEventFullDto).toList();
         return eventDtoMapper.assignViewsAndRequests(requiredEventsDto);
@@ -75,17 +75,17 @@ public class AdminEventService {
     @Transactional
     public EventFullDto updateEventByAdmin(Long eventId, UpdateEventAdminRequest updateRequest) {
         log.info("Обновление полей {} события с id={}", updateRequest, eventId);
-        EventDao eventToUpdate = eventRepository.findEventDaoById(eventId)
+        Event eventToUpdate = eventRepository.findEventDaoById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException("Не удалось получить данные о событии с id=" + eventId));
         validateUpdateConditions(eventToUpdate, updateRequest);
-        EventDao updatedEvent = updateEventDaoFieldsByAdmin(eventToUpdate, updateRequest);
+        Event updatedEvent = updateEventDaoFieldsByAdmin(eventToUpdate, updateRequest);
         eventRepository.save(updatedEvent);
         log.info("Обновлено событие {}", updatedEvent);
         EventFullDto updatedEventDto = eventDtoMapper.assembleEventFullDto(updatedEvent);
         return eventDtoMapper.assignViewsAndRequests(updatedEventDto);
     }
 
-    private EventDao updateEventDaoFieldsByAdmin(EventDao updatingEvent, UpdateEventAdminRequest updateRequest) {
+    private Event updateEventDaoFieldsByAdmin(Event updatingEvent, UpdateEventAdminRequest updateRequest) {
         if (updateRequest.getAnnotation() != null) {
             updatingEvent.setAnnotation(updateRequest.getAnnotation());
         }
@@ -125,7 +125,7 @@ public class AdminEventService {
         return updatingEvent;
     }
 
-    private void validateUpdateConditions(EventDao eventToUpdate, UpdateEventAdminRequest updateRequest) {
+    private void validateUpdateConditions(Event eventToUpdate, UpdateEventAdminRequest updateRequest) {
         if (updateRequest.getEventDate() != null && updateRequest.getEventDate().minusHours(1).isBefore(LocalDateTime.now())) {
             throw new ForbiddenActionException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: "
                                                + updateRequest.getEventDate());

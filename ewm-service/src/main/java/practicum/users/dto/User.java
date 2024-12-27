@@ -1,4 +1,4 @@
-package practicum.categories.dto;
+package practicum.users.dto;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,15 +13,16 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder(toBuilder = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 @Entity
-@Table(name = "categories")
+@Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
-public class CategoryDao {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String name;
+    String email;
 }

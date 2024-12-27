@@ -2,7 +2,7 @@ package practicum.events;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import practicum.events.dto.EventDao;
+import practicum.events.dto.Event;
 import practicum.events.dto.EventDtoMapper;
 import practicum.events.dto.EventFullDto;
 import practicum.events.dto.EventShortDto;
@@ -68,7 +68,7 @@ public class EventService {
         }
         log.info("Получение информации о событиях за период {} - {}. Параметры текст={}, категории={}",
                 start, end, text, categoriesIds);
-        List<EventDao> eventDaoByRequest = eventRepository.findAllEventDaoByAnyone(text, categoriesIds, start, end, from, size);
+        List<Event> eventDaoByRequest = eventRepository.findAllEventDaoByAnyone(text, categoriesIds, start, end, from, size);
         List<EventFullDto> eventDtoList = eventDaoByRequest.stream().map(eventDtoMapper::assembleEventFullDto).toList();
         Stream<EventFullDto> eventStream = eventDtoList.stream().filter(event -> event.getState().equals(EventState.PUBLISHED));
         if (onlyAvailable) {
@@ -92,7 +92,7 @@ public class EventService {
     }
 
     public EventFullDto getEventByAnyone(Long eventId) {
-        EventDao requiredEventDao = eventRepository.findEventDaoById(eventId)
+        Event requiredEventDao = eventRepository.findEventDaoById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException("Не удалось получить данные о событии с id=" + eventId));
         if (!requiredEventDao.getState().equals(EventState.PUBLISHED)) {
             throw new ObjectNotFoundException("Событие с id=" + eventId + " недоступно");

@@ -2,7 +2,7 @@ package practicum.categories;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import practicum.categories.dto.CategoryDao;
+import practicum.categories.dto.Category;
 import practicum.categories.dto.CategoryDto;
 import practicum.categories.dto.CategoryDtoMapper;
 import practicum.categories.dto.NewCategoryDto;
@@ -27,19 +27,19 @@ public class CategoriesService {
 
     public CategoryDto getCategoryDtoById(Long catId) {
         log.info("Получение dto категории по id={}", catId);
-        CategoryDao requiredCategory = categoryRepository.getCategoryDaoById(catId)
+        Category requiredCategory = categoryRepository.getCategoryDaoById(catId)
                 .orElseThrow(() -> new ObjectNotFoundException("Отсутствует категория с id=" + catId));
         return categoryDtoMapper.convertCategoryDaoToDto(requiredCategory);
     }
 
-    public CategoryDao getCategoryDaoById(Long catId) {
+    public Category getCategoryDaoById(Long catId) {
         log.info("Получение категории по id={}", catId);
         return categoryRepository.getCategoryDaoById(catId).orElseThrow(() -> new ObjectNotFoundException("Отсутствует категория с id=" + catId));
     }
 
     public CategoryDto addNewCategory(NewCategoryDto newCategoryDto) {
         log.info("Добавление новой категории {}", newCategoryDto);
-        CategoryDao savedCategory = categoryRepository.save(categoryDtoMapper.convertToCategoryDao(newCategoryDto));
+        Category savedCategory = categoryRepository.save(categoryDtoMapper.convertToCategoryDao(newCategoryDto));
         return categoryDtoMapper.convertCategoryDaoToDto(savedCategory);
     }
 
@@ -51,14 +51,14 @@ public class CategoriesService {
 
 
     public CategoryDto updateCategory(Long catId, NewCategoryDto updatingCategory) {
-        CategoryDao categoryToUpdate = checkCategoryExistence(catId);
+        Category categoryToUpdate = checkCategoryExistence(catId);
         log.info("Обновление категории {} на {}", categoryToUpdate, updatingCategory);
         categoryToUpdate.setName(updatingCategory.getName());
         return categoryDtoMapper.convertCategoryDaoToDto(categoryRepository.save(categoryToUpdate));
     }
 
 
-    public CategoryDao checkCategoryExistence(Long catId) {
+    public Category checkCategoryExistence(Long catId) {
         return categoryRepository.findCategoryDaoById(catId).orElseThrow(
                 () -> new ObjectNotFoundException("Category with id=" + catId + " was not found"));
     }

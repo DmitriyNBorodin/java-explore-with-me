@@ -18,10 +18,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import practicum.categories.dto.CategoryDao;
-import practicum.compilations.dto.CompilationDao;
+import practicum.categories.dto.Category;
+import practicum.compilations.dto.Compilation;
 import practicum.events.states.EventState;
-import practicum.users.dto.UserDao;
+import practicum.users.dto.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,21 +33,21 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventDao {
+public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String annotation;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category")
-    CategoryDao category;
+    Category category;
     LocalDateTime createdOn;
     String description;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime eventDate;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "initiator")
-    UserDao initiator;
+    User initiator;
     Float lat;
     Float lon;
     Boolean paid;
@@ -58,5 +58,5 @@ public class EventDao {
     EventState state;
     String title;
     @ManyToMany(mappedBy = "events")
-    List<CompilationDao> compilations;
+    List<Compilation> compilations;
 }

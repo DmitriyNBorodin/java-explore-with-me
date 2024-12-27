@@ -5,17 +5,17 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UserDtoMapper {
-    public UserDao assambleNewUserDao(NewUserDto newUserDto) {
-        return UserDao.builder().name(newUserDto.getName()).email(newUserDto.getEmail()).build();
+    public User assambleNewUserDao(NewUserDto newUserDto) {
+        return User.builder().name(newUserDto.getName()).email(newUserDto.getEmail()).build();
     }
 
-    public UserShortDto convertToShortDto(UserDao userDao) {
+    public UserShortDto convertToShortDto(User userDao) {
         return UserShortDto.builder()
                 .id(userDao.getId())
                 .name(userDao.getName()).build();
     }
 
-    public UserDto convertToUserDto(UserDao userDao) {
+    public UserDto convertToUserDto(User userDao) {
         return UserDto.builder()
                 .id(userDao.getId())
                 .name(userDao.getName())

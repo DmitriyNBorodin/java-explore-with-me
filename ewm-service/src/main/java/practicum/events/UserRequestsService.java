@@ -2,9 +2,9 @@ package practicum.events;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import practicum.events.dto.EventDao;
+import practicum.events.dto.Event;
 import practicum.events.dto.EventDtoMapper;
-import practicum.events.dto.ParticipationRequestDao;
+import practicum.events.dto.ParticipationRequest;
 import practicum.events.dto.ParticipationRequestDto;
 import practicum.events.states.EventState;
 import practicum.events.states.RequestState;
@@ -32,11 +32,11 @@ public class UserRequestsService {
 
     public ParticipationRequestDto addNewRequest(Long userId, String eventIdString) {
         Long eventId = Long.parseLong(eventIdString);
-        EventDao eventToParticipate = eventRepository.findEventDaoById(eventId)
+        Event eventToParticipate = eventRepository.findEventDaoById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException("Не удалось получить данные о событии с id=" + eventId));
-        List<ParticipationRequestDao> participationRequests = requestsRepository.findParticipationRequestDtoByEvent(eventId);
+        List<ParticipationRequest> participationRequests = requestsRepository.findParticipationRequestDtoByEvent(eventId);
         log.info("Добавление заявки на участие пользователя id={} в событии id={}", userId, eventId);
-        if (participationRequests.stream().map(ParticipationRequestDao::getRequester).collect(Collectors.toSet()).contains(userId)) {
+        if (participationRequests.stream().map(ParticipationRequest::getRequester).collect(Collectors.toSet()).contains(userId)) {
             throw new ForbiddenActionException("Request already created");
         } else if (eventToParticipate.getInitiator().getId().equals(userId)) {
             throw new ForbiddenActionException("Trying to participate own event");
@@ -47,7 +47,7 @@ public class UserRequestsService {
                            .count() >= eventToParticipate.getParticipantLimit()) {
             throw new ForbiddenActionException("Participants limit has been reached");
         }
-        ParticipationRequestDao newParticipationRequest = ParticipationRequestDao.builder()
+        ParticipationRequest newParticipationRequest = ParticipationRequest.builder()
                 .event(eventId)
                 .requester(userId)
                 .created(LocalDateTime.now())
@@ -55,12 +55,12 @@ public class UserRequestsService {
                 .build();
         if (eventToParticipate.getParticipantLimit() == 0 || !eventToParticipate.getRequestModeration()) newParticipationRequest.setStatus(RequestState.CONFIRMED);
         log.info("Создана заявка на участие {}", newParticipationRequest);
-        ParticipationRequestDao savedRequest = requestsRepository.save(newParticipationRequest);
+        ParticipationRequest savedRequest = requestsRepository.save(newParticipationRequest);
         return eventDtoMapper.convertParticipationRequestToDto(savedRequest);
     }
 
     public ParticipationRequestDto cancelUserRequest(Long userId, Long requestId) {
-        ParticipationRequestDao requestToCancel = requestsRepository.findParticipationRequestDtoById(requestId)
+        ParticipationRequest requestToCancel = requestsRepository.findParticipationRequestDtoById(requestId)
                 .orElseThrow(() -> new ObjectNotFoundException("No request found with id=" + requestId));
         if (!Objects.equals(requestToCancel.getRequester(), userId)) {
             throw new ObjectNotFoundException("Not request found with id=" + requestId + " for user with id=" + userId);

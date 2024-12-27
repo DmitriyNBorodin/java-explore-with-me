@@ -1,19 +1,19 @@
 package practicum.events;
 
-import practicum.events.dto.ParticipationRequestDao;
+import practicum.events.dto.ParticipationRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface RequestsRepository extends JpaRepository<ParticipationRequestDao, Long> {
-    List<ParticipationRequestDao> findParticipationRequestDtoByRequester(Long requester);
+public interface RequestsRepository extends JpaRepository<ParticipationRequest, Long> {
+    List<ParticipationRequest> findParticipationRequestDtoByRequester(Long requester);
 
-    List<ParticipationRequestDao> findParticipationRequestDtoByEvent(Long event);
+    List<ParticipationRequest> findParticipationRequestDtoByEvent(Long event);
 
-    Optional<ParticipationRequestDao> findParticipationRequestDtoById(Long id);
+    Optional<ParticipationRequest> findParticipationRequestDtoById(Long id);
 
-    List<ParticipationRequestDao> findParticipationRequestDtoByIdIn(List<Long> id);
+    List<ParticipationRequest> findParticipationRequestDtoByIdIn(List<Long> id);
 
-    List<ParticipationRequestDao> findParticipationRequestDtoByEventIn(List<Long> event);
+    List<ParticipationRequest> findParticipationRequestDtoByEventIn(List<Long> event);
 }

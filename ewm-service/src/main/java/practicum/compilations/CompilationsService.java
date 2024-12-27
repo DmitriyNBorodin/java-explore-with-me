@@ -3,12 +3,12 @@ package practicum.compilations;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import practicum.compilations.dto.CompilationDao;
+import practicum.compilations.dto.Compilation;
 import practicum.compilations.dto.CompilationDto;
 import practicum.compilations.dto.NewCompilationDto;
 import practicum.compilations.dto.UpdateCompilationDto;
 import practicum.events.EventRepository;
-import practicum.events.dto.EventDao;
+import practicum.events.dto.Event;
 import practicum.events.dto.EventDtoMapper;
 import practicum.events.dto.EventShortDto;
 import practicum.util.ObjectNotFoundException;
@@ -39,7 +39,7 @@ public class CompilationsService {
 
     public CompilationDto updateCompilation(Long compId, UpdateCompilationDto updateRequest) {
         log.info("Обновление подборки id={}, данные для обновления {}", compId, updateRequest);
-        CompilationDao updatingCompilation = compilationsRepository.findCompilationDaoById(compId)
+        Compilation updatingCompilation = compilationsRepository.findCompilationDaoById(compId)
                 .orElseThrow(() -> new ObjectNotFoundException("Compilation with id=" + compId + " was not found"));
         updateCompilationFields(updatingCompilation, updateRequest);
         return convertCompilationDaoToDto(compilationsRepository.save(updatingCompilation));
@@ -54,26 +54,26 @@ public class CompilationsService {
         } else {
             pinned = null;
         }
-        List<CompilationDao> rawCompilationsList = compilationsRepository.findAllCompilations(pinned, from, size);
+        List<Compilation> rawCompilationsList = compilationsRepository.findAllCompilations(pinned, from, size);
         return rawCompilationsList.stream().map(this::convertCompilationDaoToDto).toList();
     }
 
     public CompilationDto findCompilationById(Long compId) {
-        CompilationDao requiredCompilation = compilationsRepository.findCompilationDaoById(compId)
+        Compilation requiredCompilation = compilationsRepository.findCompilationDaoById(compId)
                 .orElseThrow(() -> new ObjectNotFoundException("Compilation with id=" + compId + " was not found"));
         return convertCompilationDaoToDto(requiredCompilation);
     }
 
-    private CompilationDao assembleCompilationDao(NewCompilationDto newCompilation) {
-        List<EventDao> newEventList = eventRepository.findEventDaoByIdIn(newCompilation.getEvents());
-        return CompilationDao.builder()
+    private Compilation assembleCompilationDao(NewCompilationDto newCompilation) {
+        List<Event> newEventList = eventRepository.findEventDaoByIdIn(newCompilation.getEvents());
+        return Compilation.builder()
                 .title(newCompilation.getTitle())
                 .pinned(newCompilation.getPinned())
                 .events(newEventList)
                 .build();
     }
 
-    private CompilationDto convertCompilationDaoToDto(CompilationDao compilationDao) {
+    private CompilationDto convertCompilationDaoToDto(Compilation compilationDao) {
         List<EventShortDto> eventDtoOfCompilation = compilationDao.getEvents().stream().map(eventDtoMapper::assembleEventShortDto).toList();
         List<EventShortDto> finalEventDtoList = eventDtoMapper.assignViewsAndRequests(eventDtoOfCompilation);
         return CompilationDto.builder()
@@ -84,7 +84,7 @@ public class CompilationsService {
                 .build();
     }
 
-    private CompilationDao updateCompilationFields(CompilationDao updatingCompilation, UpdateCompilationDto updateRequest) {
+    private Compilation updateCompilationFields(Compilation updatingCompilation, UpdateCompilationDto updateRequest) {
         if (updateRequest.getPinned() != null) {
             updatingCompilation.setPinned(updateRequest.getPinned());
         }
@@ -92,7 +92,7 @@ public class CompilationsService {
             updatingCompilation.setTitle(updateRequest.getTitle());
         }
         if (updateRequest.getEvents() != null) {
-            List<EventDao> newEventList = eventRepository.findEventDaoByIdIn(updateRequest.getEvents());
+            List<Event> newEventList = eventRepository.findEventDaoByIdIn(updateRequest.getEvents());
             updatingCompilation.setEvents(newEventList);
         }
         return updatingCompilation;

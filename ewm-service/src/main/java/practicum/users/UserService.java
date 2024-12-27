@@ -4,7 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import practicum.users.dto.NewUserDto;
-import practicum.users.dto.UserDao;
+import practicum.users.dto.User;
 import practicum.users.dto.UserDto;
 import practicum.users.dto.UserDtoMapper;
 import practicum.util.AdditionalEmailValidationException;
@@ -28,7 +28,7 @@ public class UserService {
         if (ids != null) {
             idsLong = ids.stream().map(Long::parseLong).toList();
         }
-        List<UserDao> requiredUsers = userRepository.getUserDaoByIdList(idsLong, fromLong, sizeLong);
+        List<User> requiredUsers = userRepository.getUserDaoByIdList(idsLong, fromLong, sizeLong);
         log.info("Получены пользователи {}", requiredUsers);
         return requiredUsers.stream().map(userDtoMapper::convertToUserDto).toList();
     }
@@ -36,7 +36,7 @@ public class UserService {
     public UserDto addNewUser(NewUserDto newUser) {
         log.info("Добавление пользователя {}", newUser);
         additionEmailValidation(newUser);
-        UserDao savedUser = userRepository.save(userDtoMapper.assambleNewUserDao(newUser));
+        User savedUser = userRepository.save(userDtoMapper.assambleNewUserDao(newUser));
         return userDtoMapper.convertToUserDto(savedUser);
     }
 
@@ -47,7 +47,7 @@ public class UserService {
         userRepository.deleteUserDaoById(userId);
     }
 
-    public UserDao getUserDaoById(Long userId) {
+    public User getUserDaoById(Long userId) {
         return userRepository.getUserDaoById(userId).orElseThrow(
                 () -> new ObjectNotFoundException("User with id=" + userId + " was not found"));
     }

@@ -4,14 +4,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import practicum.categories.CategoriesService;
-import practicum.events.dto.EventDao;
+import practicum.events.dto.Event;
 import practicum.events.dto.EventDtoMapper;
 import practicum.events.dto.EventFullDto;
 import practicum.events.dto.EventRequestStatusUpdateRequest;
 import practicum.events.dto.EventRequestStatusUpdateResult;
 import practicum.events.dto.EventShortDto;
 import practicum.events.dto.NewEventDto;
-import practicum.events.dto.ParticipationRequestDao;
+import practicum.events.dto.ParticipationRequest;
 import practicum.events.dto.UpdateEventUserRequest;
 import practicum.events.states.EventState;
 import practicum.events.states.RequestState;
@@ -54,7 +54,7 @@ public class UserEventsService {
     @Transactional
     public EventFullDto getUserEventById(Long userId, Long eventId) {
         log.info("Получение информации о событии id={} пользователем id={}", eventId, userId);
-        EventDao requiredEvent = eventRepository.findEventDaoById(eventId)
+        Event requiredEvent = eventRepository.findEventDaoById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException("Не удалось получить данные о событии с id=" + eventId));
         if (!Objects.equals(requiredEvent.getInitiator().getId(), userId)) {
             throw new ObjectNotFoundException("Event with id=" + eventId + " was not found");
@@ -66,21 +66,21 @@ public class UserEventsService {
     @Transactional
     public EventFullDto updateEventByUser(Long userId, Long eventId, UpdateEventUserRequest updateRequest) {
         log.info("Получение информации о событии id={} пользователем id={} для обновления", eventId, userId);
-        EventDao eventToUpdate = eventRepository.findEventDaoById(eventId)
+        Event eventToUpdate = eventRepository.findEventDaoById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException("Не удалось получить данные о событии с id=" + eventId));
         log.info("По id={} получено событие {}", eventId, eventToUpdate);
         if (!eventToUpdate.getInitiator().getId().equals(userId) || eventToUpdate.getState().equals(EventState.PUBLISHED)) {
             throw new ForbiddenActionException("Event with id=" + eventId + " unavailable");
         }
         validateEventDate(updateRequest.getEventDate());
-        EventDao updatedEvent = updateEventDaoFieldsByUser(eventToUpdate, updateRequest);
+        Event updatedEvent = updateEventDaoFieldsByUser(eventToUpdate, updateRequest);
         eventRepository.save(updatedEvent);
         EventFullDto requiredEventDto = eventDtoMapper.assembleEventFullDto(updatedEvent);
         return eventDtoMapper.assignViewsAndRequests(requiredEventDto);
     }
 
     @Transactional
-    public List<ParticipationRequestDao> getUserEventRequests(Long userId, Long eventId) {
+    public List<ParticipationRequest> getUserEventRequests(Long userId, Long eventId) {
         validateUserEventAndGetLimit(userId, eventId);
         return requestsRepository.findParticipationRequestDtoByEvent(eventId);
     }
@@ -90,11 +90,11 @@ public class UserEventsService {
         Long eventParticipantsLimit = validateUserEventAndGetLimit(userId, eventId);
         EventRequestStatusUpdateResult result = new EventRequestStatusUpdateResult();
         long willBeConfirmed = 0L;
-        List<ParticipationRequestDao> requestsToUpdateList = requestsRepository.findParticipationRequestDtoByIdIn(updateRequest.getRequestIds());
+        List<ParticipationRequest> requestsToUpdateList = requestsRepository.findParticipationRequestDtoByIdIn(updateRequest.getRequestIds());
         if (requestsToUpdateList.stream().anyMatch(request -> !request.getStatus().equals(RequestState.PENDING))) {
             throw new ForbiddenActionException("Only pending requests available for updating");
         }
-        List<ParticipationRequestDao> eventRequestsList = requestsRepository.findParticipationRequestDtoByEvent(eventId);
+        List<ParticipationRequest> eventRequestsList = requestsRepository.findParticipationRequestDtoByEvent(eventId);
         if (updateRequest.getStatus().equals(RequestState.CONFIRMED)) {
             willBeConfirmed = eventRequestsList.stream().filter(request -> request.getStatus().equals(RequestState.CONFIRMED)).count()
                               + updateRequest.getRequestIds().size();
@@ -102,7 +102,7 @@ public class UserEventsService {
         if (updateRequest.getStatus().equals(RequestState.CONFIRMED) && eventParticipantsLimit != 0 && willBeConfirmed > eventParticipantsLimit) {
             throw new ForbiddenActionException("Participants limit has been reached");
         }
-        List<ParticipationRequestDao> listOfUpdatingRequests = requestsToUpdateList.stream()
+        List<ParticipationRequest> listOfUpdatingRequests = requestsToUpdateList.stream()
                 .peek(request -> request.setStatus(updateRequest.getStatus())).toList();
         requestsRepository.saveAll(listOfUpdatingRequests);
         if (updateRequest.getStatus().equals(RequestState.REJECTED)) {
@@ -111,7 +111,7 @@ public class UserEventsService {
         if (updateRequest.getStatus().equals(RequestState.CONFIRMED)) {
             result.setConfirmedRequests(listOfUpdatingRequests.stream().map(eventDtoMapper::convertParticipationRequestToDto).toList());
             if (willBeConfirmed == eventParticipantsLimit) {
-                List<ParticipationRequestDao> listOfSpareRequests = eventRequestsList.stream()
+                List<ParticipationRequest> listOfSpareRequests = eventRequestsList.stream()
                         .filter(request -> !updateRequest.getRequestIds().contains(request.getId()))
                         .filter(request -> !request.getStatus().equals(RequestState.CONFIRMED))
                         .peek(request -> request.setStatus(RequestState.REJECTED)).toList();
@@ -122,7 +122,7 @@ public class UserEventsService {
         return result;
     }
 
-    private EventDao updateEventDaoFieldsByUser(EventDao updatingEvent, UpdateEventUserRequest updateRequest) {
+    private Event updateEventDaoFieldsByUser(Event updatingEvent, UpdateEventUserRequest updateRequest) {
         if (updateRequest.getAnnotation() != null) {
             updatingEvent.setAnnotation(updateRequest.getAnnotation());
         }
@@ -168,7 +168,7 @@ public class UserEventsService {
     }
 
     private Long validateUserEventAndGetLimit(Long userId, Long eventId) {
-        EventDao eventToCheck = eventRepository.findEventDaoById(eventId)
+        Event eventToCheck = eventRepository.findEventDaoById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException("Не удалось получить данные о событии с id=" + eventId));
         if (!Objects.equals(userId, eventToCheck.getInitiator().getId())) {
             throw new ForbiddenActionException("Пользователь с id=" + userId + " не является создателем события с id=" + eventId);
