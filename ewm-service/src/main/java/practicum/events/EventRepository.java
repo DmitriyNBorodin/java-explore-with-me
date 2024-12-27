@@ -12,7 +12,7 @@ import java.util.Optional;
 
 
 public interface EventRepository extends JpaRepository<Event, Long> {
-    @Query("select ed from EventDao as ed join ed.initiator as u where u.id = ?1 order by ed.id" +
+    @Query("select ed from Event as ed join ed.initiator as u where u.id = ?1 order by ed.id" +
            " offset ?2 rows fetch next ?3 rows only")
     List<Event> findUserEvents(Long userId, Long from, Long size);
 
