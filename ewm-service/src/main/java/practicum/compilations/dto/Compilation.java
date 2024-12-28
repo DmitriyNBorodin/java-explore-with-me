@@ -8,10 +8,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import practicum.events.dto.Event;
 
 import java.util.List;
@@ -22,14 +24,15 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "compilations")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Compilation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
     @OneToMany
     @JoinTable(name = "compilations_events", joinColumns = @JoinColumn(name = "compilation_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
-    private List<Event> events;
-    private Boolean pinned;
-    private String title;
+    List<Event> events;
+    Boolean pinned;
+    String title;
 }

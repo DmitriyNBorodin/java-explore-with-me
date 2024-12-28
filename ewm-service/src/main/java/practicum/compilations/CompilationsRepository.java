@@ -11,9 +11,9 @@ import java.util.Optional;
 
 @Repository
 public interface CompilationsRepository extends JpaRepository<Compilation, Long> {
-    Long deleteCompilationDaoById(Long id);
+    Long deleteCompilationById(Long id);
 
-    Optional<Compilation> findCompilationDaoById(Long id);
+    Optional<Compilation> findCompilationById(Long id);
 
     @Query("select c from Compilation as c where coalesce(:pinned, c.pinned) = c.pinned " +
            "order by c.id offset :from rows fetch next :size rows only")

@@ -2,6 +2,7 @@ package practicum.events;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import practicum.events.dto.Event;
 import practicum.events.dto.EventDtoMapper;
 import practicum.events.dto.ParticipationRequest;
@@ -25,16 +26,18 @@ public class UserRequestsService {
     private final EventRepository eventRepository;
     private final EventDtoMapper eventDtoMapper;
 
+    @Transactional(readOnly = true)
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
-        return requestsRepository.findParticipationRequestDtoByRequester(userId).stream()
+        return requestsRepository.findParticipationRequestByRequester(userId).stream()
                 .map(eventDtoMapper::convertParticipationRequestToDto).toList();
     }
 
+    @Transactional
     public ParticipationRequestDto addNewRequest(Long userId, String eventIdString) {
         Long eventId = Long.parseLong(eventIdString);
-        Event eventToParticipate = eventRepository.findEventDaoById(eventId)
+        Event eventToParticipate = eventRepository.findEventById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException("Не удалось получить данные о событии с id=" + eventId));
-        List<ParticipationRequest> participationRequests = requestsRepository.findParticipationRequestDtoByEvent(eventId);
+        List<ParticipationRequest> participationRequests = requestsRepository.findParticipationRequestByEvent(eventId);
         log.info("Добавление заявки на участие пользователя id={} в событии id={}", userId, eventId);
         if (participationRequests.stream().map(ParticipationRequest::getRequester).collect(Collectors.toSet()).contains(userId)) {
             throw new ForbiddenActionException("Request already created");
@@ -59,8 +62,9 @@ public class UserRequestsService {
         return eventDtoMapper.convertParticipationRequestToDto(savedRequest);
     }
 
+    @Transactional
     public ParticipationRequestDto cancelUserRequest(Long userId, Long requestId) {
-        ParticipationRequest requestToCancel = requestsRepository.findParticipationRequestDtoById(requestId)
+        ParticipationRequest requestToCancel = requestsRepository.findParticipationRequestById(requestId)
                 .orElseThrow(() -> new ObjectNotFoundException("No request found with id=" + requestId));
         if (!Objects.equals(requestToCancel.getRequester(), userId)) {
             throw new ObjectNotFoundException("Not request found with id=" + requestId + " for user with id=" + userId);

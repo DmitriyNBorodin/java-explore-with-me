@@ -7,6 +7,7 @@ import practicum.categories.dto.CategoryDtoMapper;
 import practicum.events.RequestsRepository;
 import practicum.events.states.EventState;
 import practicum.events.states.RequestState;
+import practicum.events.states.StateAction;
 import practicum.users.UserService;
 import practicum.GatheredStatsDto;
 import practicum.StatsClient;
@@ -15,6 +16,7 @@ import practicum.users.dto.UserDtoMapper;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -30,14 +32,17 @@ public class EventDtoMapper {
     private final CategoryDtoMapper categoryDtoMapper;
     private final UserDtoMapper userDtoMapper;
 
-    public Event assembleNewEventDao(Long userId, NewEventDto newEventDto) {
+    public Event assembleNewEvent(Long userId, NewEventDto newEventDto) {
+        if (newEventDto == null) {
+            throw new InputMismatchException("Failed to get new event data");
+        }
         return Event.builder()
                 .annotation(newEventDto.getAnnotation())
                 .category(categoriesService.checkCategoryExistence(newEventDto.getCategory()))
                 .createdOn(LocalDateTime.now())
                 .description(newEventDto.getDescription())
                 .eventDate(newEventDto.getEventDate())
-                .initiator(userService.getUserDaoById(userId))
+                .initiator(userService.getUserById(userId))
                 .lat(newEventDto.getLocation().getLat())
                 .lon(newEventDto.getLocation().getLon())
                 .paid(newEventDto.getPaid())
@@ -49,37 +54,37 @@ public class EventDtoMapper {
                 .build();
     }
 
-    public EventFullDto assembleEventFullDto(Event eventDao) {
+    public EventFullDto assembleEventFullDto(Event event) {
         return EventFullDto.builder()
-                .id(eventDao.getId())
-                .annotation(eventDao.getAnnotation())
-                .category(categoryDtoMapper.convertCategoryDaoToDto(eventDao.getCategory()))
-                .createdOn(eventDao.getCreatedOn())
-                .description(eventDao.getDescription())
-                .eventDate(eventDao.getEventDate())
-                .initiator(userDtoMapper.convertToShortDto(eventDao.getInitiator()))
-                .location(new Location(eventDao.getLat(), eventDao.getLon()))
-                .paid(eventDao.getPaid())
-                .participantLimit(eventDao.getParticipantLimit())
-                .publishedOn(eventDao.getPublishedOn())
-                .requestModeration(eventDao.getRequestModeration())
-                .state(eventDao.getState())
-                .title(eventDao.getTitle())
+                .id(event.getId())
+                .annotation(event.getAnnotation())
+                .category(categoryDtoMapper.convertCategoryToDto(event.getCategory()))
+                .createdOn(event.getCreatedOn())
+                .description(event.getDescription())
+                .eventDate(event.getEventDate())
+                .initiator(userDtoMapper.convertToShortDto(event.getInitiator()))
+                .location(new Location(event.getLat(), event.getLon()))
+                .paid(event.getPaid())
+                .participantLimit(event.getParticipantLimit())
+                .publishedOn(event.getPublishedOn())
+                .requestModeration(event.getRequestModeration())
+                .state(event.getState())
+                .title(event.getTitle())
                 .confirmedRequests(0)
                 .views(0L)
                 .build();
     }
 
-    public EventShortDto assembleEventShortDto(Event eventDao) {
+    public EventShortDto assembleEventShortDto(Event event) {
         return EventShortDto.builder()
-                .id(eventDao.getId())
-                .annotation(eventDao.getAnnotation())
-                .category(categoryDtoMapper.convertCategoryDaoToDto(eventDao.getCategory()))
+                .id(event.getId())
+                .annotation(event.getAnnotation())
+                .category(categoryDtoMapper.convertCategoryToDto(event.getCategory()))
                 .confirmedRequests(0)
-                .eventDate(eventDao.getEventDate())
-                .initiator(userDtoMapper.convertToShortDto(eventDao.getInitiator()))
-                .paid(eventDao.getPaid())
-                .title(eventDao.getTitle())
+                .eventDate(event.getEventDate())
+                .initiator(userDtoMapper.convertToShortDto(event.getInitiator()))
+                .paid(event.getPaid())
+                .title(event.getTitle())
                 .views(0L)
                 .build();
     }
@@ -95,7 +100,7 @@ public class EventDtoMapper {
             List<Long> eventIdList = eventDto.stream().map(EventShortDto::getId).collect(Collectors.toList());
             List<GatheredStatsDto> statsList = statsClient.getStatistics(eventIdList, LocalDateTime.now().minusYears(50),
                     LocalDateTime.now(), "true");
-            List<ParticipationRequest> requestsOfEvents = requestsRepository.findParticipationRequestDtoByEventIn(eventIdList);
+            List<ParticipationRequest> requestsOfEvents = requestsRepository.findParticipationRequestByEventIn(eventIdList);
             Map<Long, Long> mapOfConfirmedRequests = requestsOfEvents.stream()
                     .filter(request -> request.getStatus().equals(RequestState.CONFIRMED))
                     .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
@@ -129,13 +134,100 @@ public class EventDtoMapper {
                 .build();
     }
 
-    public ParticipationRequestDto convertParticipationRequestToDto(ParticipationRequest participationRequestDao) {
+    public ParticipationRequestDto convertParticipationRequestToDto(ParticipationRequest participationRequest) {
+        if (participationRequest == null) {
+            throw new InputMismatchException("Failed to get new participation request data");
+        }
         return ParticipationRequestDto.builder()
-                .id(participationRequestDao.getId())
-                .created(participationRequestDao.getCreated())
-                .event(participationRequestDao.getEvent())
-                .requester(participationRequestDao.getRequester())
-                .status(participationRequestDao.getStatus())
+                .id(participationRequest.getId())
+                .created(participationRequest.getCreated())
+                .event(participationRequest.getEvent())
+                .requester(participationRequest.getRequester())
+                .status(participationRequest.getStatus())
                 .build();
+    }
+
+    public Event updateEventFieldsByAdmin(Event updatingEvent, UpdateEventAdminRequest updateRequest) {
+        if (updateRequest == null) {
+            throw new InputMismatchException("Failed to get update request data");
+        }
+        if (updateRequest.getAnnotation() != null) {
+            updatingEvent.setAnnotation(updateRequest.getAnnotation());
+        }
+        if (updateRequest.getCategory() != null) {
+            updatingEvent.setCategory(categoriesService.getCategoryById(updateRequest.getCategory()));
+        }
+        if (updateRequest.getDescription() != null) {
+            updatingEvent.setDescription(updateRequest.getDescription());
+        }
+        if (updateRequest.getEventDate() != null) {
+            updatingEvent.setEventDate(updateRequest.getEventDate());
+        }
+        if (updateRequest.getLocation() != null) {
+            updatingEvent.setLat(updateRequest.getLocation().getLat());
+            updatingEvent.setLon(updateRequest.getLocation().getLon());
+        }
+        if (updateRequest.getPaid() != null) {
+            updatingEvent.setPaid(updateRequest.getPaid());
+        }
+        if (updateRequest.getParticipantLimit() != null) {
+            updatingEvent.setParticipantLimit(updateRequest.getParticipantLimit());
+        }
+        if (updateRequest.getRequestModeration() != null) {
+            updatingEvent.setRequestModeration(updateRequest.getRequestModeration());
+        }
+        if (updateRequest.getTitle() != null) {
+            updatingEvent.setTitle(updateRequest.getTitle());
+        }
+        if (updateRequest.getStateAction() != null) {
+            if (updateRequest.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
+                updatingEvent.setState(EventState.PUBLISHED);
+                updatingEvent.setPublishedOn(LocalDateTime.now());
+            }
+            if (updateRequest.getStateAction().equals(StateAction.REJECT_EVENT))
+                updatingEvent.setState(EventState.CANCELED);
+        }
+        return updatingEvent;
+    }
+
+    public Event updateEventFieldsByUser(Event updatingEvent, UpdateEventUserRequest updateRequest) {
+        if (updateRequest == null) {
+            throw new InputMismatchException("Failed to get update request data");
+        }
+        if (updateRequest.getAnnotation() != null) {
+            updatingEvent.setAnnotation(updateRequest.getAnnotation());
+        }
+        if (updateRequest.getCategory() != null) {
+            updatingEvent.setCategory(categoriesService.getCategoryById(updateRequest.getCategory()));
+        }
+        if (updateRequest.getDescription() != null) {
+            updatingEvent.setDescription(updateRequest.getDescription());
+        }
+        if (updateRequest.getEventDate() != null) {
+            updatingEvent.setEventDate(updateRequest.getEventDate());
+        }
+        if (updateRequest.getLocation() != null) {
+            updatingEvent.setLat(updateRequest.getLocation().getLat());
+            updatingEvent.setLon(updateRequest.getLocation().getLon());
+        }
+        if (updateRequest.getPaid() != null) {
+            updatingEvent.setPaid(updateRequest.getPaid());
+        }
+        if (updateRequest.getParticipantLimit() != null) {
+            updatingEvent.setParticipantLimit(updateRequest.getParticipantLimit());
+        }
+        if (updateRequest.getRequestModeration() != null) {
+            updatingEvent.setRequestModeration(updateRequest.getRequestModeration());
+        }
+        if (updateRequest.getTitle() != null) {
+            updatingEvent.setTitle(updateRequest.getTitle());
+        }
+        if (updateRequest.getStateAction() != null) {
+            if (updateRequest.getStateAction().equals(StateAction.SEND_TO_REVIEW))
+                updatingEvent.setState(EventState.PENDING);
+            if (updateRequest.getStateAction().equals(StateAction.CANCEL_REVIEW))
+                updatingEvent.setState(EventState.CANCELED);
+        }
+        return updatingEvent;
     }
 }

@@ -2,6 +2,7 @@ package practicum.events;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import practicum.events.dto.Event;
 import practicum.events.dto.EventDtoMapper;
 import practicum.events.dto.EventFullDto;
@@ -27,6 +28,7 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventDtoMapper eventDtoMapper;
 
+    @Transactional(readOnly = true)
     public List<EventShortDto> getEventsByAnyone(String text, List<String> categoriesIdsString, String paidString, String startString, String endString,
                                                  String onlyAvailableString, String sortString, String fromString, String sizeString) {
         List<Long> categoriesIds = null;
@@ -68,7 +70,7 @@ public class EventService {
         }
         log.info("Получение информации о событиях за период {} - {}. Параметры текст={}, категории={}",
                 start, end, text, categoriesIds);
-        List<Event> eventDaoByRequest = eventRepository.findAllEventDaoByAnyone(text, categoriesIds, start, end, from, size);
+        List<Event> eventDaoByRequest = eventRepository.findAllEventByAnyone(text, categoriesIds, start, end, from, size);
         List<EventFullDto> eventDtoList = eventDaoByRequest.stream().map(eventDtoMapper::assembleEventFullDto).toList();
         Stream<EventFullDto> eventStream = eventDtoList.stream().filter(event -> event.getState().equals(EventState.PUBLISHED));
         if (onlyAvailable) {
@@ -91,8 +93,9 @@ public class EventService {
         return listOfEvents;
     }
 
+    @Transactional(readOnly = true)
     public EventFullDto getEventByAnyone(Long eventId) {
-        Event requiredEventDao = eventRepository.findEventDaoById(eventId)
+        Event requiredEventDao = eventRepository.findEventById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException("Не удалось получить данные о событии с id=" + eventId));
         if (!requiredEventDao.getState().equals(EventState.PUBLISHED)) {
             throw new ObjectNotFoundException("Событие с id=" + eventId + " недоступно");

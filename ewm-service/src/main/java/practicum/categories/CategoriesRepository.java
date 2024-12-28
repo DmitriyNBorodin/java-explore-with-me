@@ -9,9 +9,9 @@ import java.util.Optional;
 
 public interface CategoriesRepository extends JpaRepository<Category, Long> {
     @Query("select c from Category as c order by c.id offset ?1 rows fetch next ?2 rows only")
-    List<Category> getAllCategoryDao(Long from, Long size);
+    List<Category> getAllCategory(Long from, Long size);
 
-    Optional<Category> getCategoryDaoById(Long id);
+    Optional<Category> getCategoryById(Long id);
 
-    Optional<Category> findCategoryDaoById(Long id);
+    Optional<Category> findCategoryById(Long id);
 }

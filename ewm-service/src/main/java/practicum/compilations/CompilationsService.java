@@ -1,16 +1,13 @@
 package practicum.compilations;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import practicum.compilations.dto.Compilation;
 import practicum.compilations.dto.CompilationDto;
+import practicum.compilations.dto.CompilationDtoMapper;
 import practicum.compilations.dto.NewCompilationDto;
 import practicum.compilations.dto.UpdateCompilationDto;
-import practicum.events.EventRepository;
-import practicum.events.dto.Event;
-import practicum.events.dto.EventDtoMapper;
-import practicum.events.dto.EventShortDto;
 import practicum.util.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -21,30 +18,33 @@ import java.util.List;
 @Slf4j
 public class CompilationsService {
     private final CompilationsRepository compilationsRepository;
-    private final EventRepository eventRepository;
-    private final EventDtoMapper eventDtoMapper;
+    private final CompilationDtoMapper compilationDtoMapper;
 
-    public CompilationDto addNewCompilation(NewCompilationDto newCompilation) {
-        log.info("Добавление новой подборки {}", newCompilation);
-        return convertCompilationDaoToDto(compilationsRepository.save(assembleCompilationDao(newCompilation)));
+    @Transactional
+    public CompilationDto addNewCompilation(NewCompilationDto newCompilationDto) {
+        log.info("Добавление новой подборки {}", newCompilationDto);
+        Compilation newCompilation = compilationsRepository.save(compilationDtoMapper.assembleCompilation(newCompilationDto));
+        return compilationDtoMapper.convertCompilationToDto(newCompilation);
     }
 
     @Transactional
     public void deleteCompilationById(Long id) {
         log.info("Удаление подборки событий id={}", id);
-        if (compilationsRepository.deleteCompilationDaoById(id) == 0) {
+        if (compilationsRepository.deleteCompilationById(id) == 0) {
             throw new ObjectNotFoundException("Compilation with id=" + id + " was not found");
         }
     }
 
+    @Transactional
     public CompilationDto updateCompilation(Long compId, UpdateCompilationDto updateRequest) {
         log.info("Обновление подборки id={}, данные для обновления {}", compId, updateRequest);
-        Compilation updatingCompilation = compilationsRepository.findCompilationDaoById(compId)
+        Compilation updatingCompilation = compilationsRepository.findCompilationById(compId)
                 .orElseThrow(() -> new ObjectNotFoundException("Compilation with id=" + compId + " was not found"));
-        updateCompilationFields(updatingCompilation, updateRequest);
-        return convertCompilationDaoToDto(compilationsRepository.save(updatingCompilation));
+        compilationDtoMapper.updateCompilationFields(updatingCompilation, updateRequest);
+        return compilationDtoMapper.convertCompilationToDto(compilationsRepository.save(updatingCompilation));
     }
 
+    @Transactional(readOnly = true)
     public List<CompilationDto> findAllCompilations(String pinnedString, String fromString, String sizeString) {
         Long from = Long.parseLong(fromString);
         Long size = Long.parseLong(sizeString);
@@ -55,46 +55,15 @@ public class CompilationsService {
             pinned = null;
         }
         List<Compilation> rawCompilationsList = compilationsRepository.findAllCompilations(pinned, from, size);
-        return rawCompilationsList.stream().map(this::convertCompilationDaoToDto).toList();
+        return rawCompilationsList.stream().map(compilationDtoMapper::convertCompilationToDto).toList();
     }
 
+    @Transactional(readOnly = true)
     public CompilationDto findCompilationById(Long compId) {
-        Compilation requiredCompilation = compilationsRepository.findCompilationDaoById(compId)
+        Compilation requiredCompilation = compilationsRepository.findCompilationById(compId)
                 .orElseThrow(() -> new ObjectNotFoundException("Compilation with id=" + compId + " was not found"));
-        return convertCompilationDaoToDto(requiredCompilation);
+        return compilationDtoMapper.convertCompilationToDto(requiredCompilation);
     }
 
-    private Compilation assembleCompilationDao(NewCompilationDto newCompilation) {
-        List<Event> newEventList = eventRepository.findEventDaoByIdIn(newCompilation.getEvents());
-        return Compilation.builder()
-                .title(newCompilation.getTitle())
-                .pinned(newCompilation.getPinned())
-                .events(newEventList)
-                .build();
-    }
 
-    private CompilationDto convertCompilationDaoToDto(Compilation compilationDao) {
-        List<EventShortDto> eventDtoOfCompilation = compilationDao.getEvents().stream().map(eventDtoMapper::assembleEventShortDto).toList();
-        List<EventShortDto> finalEventDtoList = eventDtoMapper.assignViewsAndRequests(eventDtoOfCompilation);
-        return CompilationDto.builder()
-                .id(compilationDao.getId())
-                .pinned(compilationDao.getPinned())
-                .title(compilationDao.getTitle())
-                .events(finalEventDtoList)
-                .build();
-    }
-
-    private Compilation updateCompilationFields(Compilation updatingCompilation, UpdateCompilationDto updateRequest) {
-        if (updateRequest.getPinned() != null) {
-            updatingCompilation.setPinned(updateRequest.getPinned());
-        }
-        if (updateRequest.getTitle() != null) {
-            updatingCompilation.setTitle(updateRequest.getTitle());
-        }
-        if (updateRequest.getEvents() != null) {
-            List<Event> newEventList = eventRepository.findEventDaoByIdIn(updateRequest.getEvents());
-            updatingCompilation.setEvents(newEventList);
-        }
-        return updatingCompilation;
-    }
 }

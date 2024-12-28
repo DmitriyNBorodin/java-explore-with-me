@@ -27,6 +27,7 @@ import java.util.List;
 public class StatsClient {
     private final RestTemplate restTemplate = new RestTemplate();
     private final String statsHost = "stats-server";
+
     private final int statsServicePort = 9090;
     private final String statsServiceScheme = "http";
     private final DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

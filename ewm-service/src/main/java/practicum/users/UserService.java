@@ -1,8 +1,8 @@
 package practicum.users;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import practicum.users.dto.NewUserDto;
 import practicum.users.dto.User;
 import practicum.users.dto.UserDto;
@@ -20,6 +20,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserDtoMapper userDtoMapper;
 
+    @Transactional(readOnly = true)
     public List<UserDto> getUsers(List<String> ids, String from, String size) {
         log.info("Поиск пользователей по параметрам ids={}, from={}, size={}", ids, from, size);
         Long fromLong = Long.parseLong(from);
@@ -28,27 +29,29 @@ public class UserService {
         if (ids != null) {
             idsLong = ids.stream().map(Long::parseLong).toList();
         }
-        List<User> requiredUsers = userRepository.getUserDaoByIdList(idsLong, fromLong, sizeLong);
+        List<User> requiredUsers = userRepository.getUserByIdList(idsLong, fromLong, sizeLong);
         log.info("Получены пользователи {}", requiredUsers);
         return requiredUsers.stream().map(userDtoMapper::convertToUserDto).toList();
     }
 
+    @Transactional
     public UserDto addNewUser(NewUserDto newUser) {
         log.info("Добавление пользователя {}", newUser);
         additionEmailValidation(newUser);
-        User savedUser = userRepository.save(userDtoMapper.assambleNewUserDao(newUser));
+        User savedUser = userRepository.save(userDtoMapper.assembleNewUserDao(newUser));
         return userDtoMapper.convertToUserDto(savedUser);
     }
 
     @Transactional
     public void deleteUserById(Long userId) {
-        if (userRepository.getUserDaoById(userId).isEmpty())
+        if (userRepository.getUserById(userId).isEmpty())
             throw new ObjectNotFoundException("User with id=" + userId + " was not found");
-        userRepository.deleteUserDaoById(userId);
+        userRepository.deleteUserById(userId);
     }
 
-    public User getUserDaoById(Long userId) {
-        return userRepository.getUserDaoById(userId).orElseThrow(
+    @Transactional(readOnly = true)
+    public User getUserById(Long userId) {
+        return userRepository.getUserById(userId).orElseThrow(
                 () -> new ObjectNotFoundException("User with id=" + userId + " was not found"));
     }
 

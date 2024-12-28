@@ -1,8 +1,8 @@
 package practicum.events;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import practicum.categories.CategoriesService;
 import practicum.events.dto.Event;
 import practicum.events.dto.EventDtoMapper;
@@ -30,6 +30,7 @@ public class AdminEventService {
     private final EventDtoMapper eventDtoMapper;
     private final CategoriesService categoriesService;
 
+    @Transactional(readOnly = true)
     public List<EventFullDto> getEventsByAdmin(List<String> userIdsString, List<String> statesString, List<String> categoriesIdsString,
                                                String startString, String endString, String fromString, String sizeString) {
         List<Long> userIds = null;
@@ -66,7 +67,7 @@ public class AdminEventService {
         }
         log.info("Получение событий администратором по параметрам userIds={}, states={}, categoriesId={}, start={}, end={}, from={}, size={}",
                 userIds, states, categoriesIds, start, end, from, size);
-        List<Event> requiredEvents = eventRepository.findAllEventDaoByAdmin(userIds, states, categoriesIds, start, end, from, size);
+        List<Event> requiredEvents = eventRepository.findAllEventByAdmin(userIds, states, categoriesIds, start, end, from, size);
         log.info("Получено {} событий", requiredEvents.size());
         List<EventFullDto> requiredEventsDto = requiredEvents.stream().map(eventDtoMapper::assembleEventFullDto).toList();
         return eventDtoMapper.assignViewsAndRequests(requiredEventsDto);
@@ -75,54 +76,14 @@ public class AdminEventService {
     @Transactional
     public EventFullDto updateEventByAdmin(Long eventId, UpdateEventAdminRequest updateRequest) {
         log.info("Обновление полей {} события с id={}", updateRequest, eventId);
-        Event eventToUpdate = eventRepository.findEventDaoById(eventId)
+        Event eventToUpdate = eventRepository.findEventById(eventId)
                 .orElseThrow(() -> new ObjectNotFoundException("Не удалось получить данные о событии с id=" + eventId));
         validateUpdateConditions(eventToUpdate, updateRequest);
-        Event updatedEvent = updateEventDaoFieldsByAdmin(eventToUpdate, updateRequest);
+        Event updatedEvent = eventDtoMapper.updateEventFieldsByAdmin(eventToUpdate, updateRequest);
         eventRepository.save(updatedEvent);
         log.info("Обновлено событие {}", updatedEvent);
         EventFullDto updatedEventDto = eventDtoMapper.assembleEventFullDto(updatedEvent);
         return eventDtoMapper.assignViewsAndRequests(updatedEventDto);
-    }
-
-    private Event updateEventDaoFieldsByAdmin(Event updatingEvent, UpdateEventAdminRequest updateRequest) {
-        if (updateRequest.getAnnotation() != null) {
-            updatingEvent.setAnnotation(updateRequest.getAnnotation());
-        }
-        if (updateRequest.getCategory() != null) {
-            updatingEvent.setCategory(categoriesService.getCategoryDaoById(updateRequest.getCategory()));
-        }
-        if (updateRequest.getDescription() != null) {
-            updatingEvent.setDescription(updateRequest.getDescription());
-        }
-        if (updateRequest.getEventDate() != null) {
-            updatingEvent.setEventDate(updateRequest.getEventDate());
-        }
-        if (updateRequest.getLocation() != null) {
-            updatingEvent.setLat(updateRequest.getLocation().getLat());
-            updatingEvent.setLon(updateRequest.getLocation().getLon());
-        }
-        if (updateRequest.getPaid() != null) {
-            updatingEvent.setPaid(updateRequest.getPaid());
-        }
-        if (updateRequest.getParticipantLimit() != null) {
-            updatingEvent.setParticipantLimit(updateRequest.getParticipantLimit());
-        }
-        if (updateRequest.getRequestModeration() != null) {
-            updatingEvent.setRequestModeration(updateRequest.getRequestModeration());
-        }
-        if (updateRequest.getTitle() != null) {
-            updatingEvent.setTitle(updateRequest.getTitle());
-        }
-        if (updateRequest.getStateAction() != null) {
-            if (updateRequest.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
-                updatingEvent.setState(EventState.PUBLISHED);
-                updatingEvent.setPublishedOn(LocalDateTime.now());
-            }
-            if (updateRequest.getStateAction().equals(StateAction.REJECT_EVENT))
-                updatingEvent.setState(EventState.CANCELED);
-        }
-        return updatingEvent;
     }
 
     private void validateUpdateConditions(Event eventToUpdate, UpdateEventAdminRequest updateRequest) {

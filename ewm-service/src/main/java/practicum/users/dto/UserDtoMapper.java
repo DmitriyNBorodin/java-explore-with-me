@@ -3,9 +3,14 @@ package practicum.users.dto;
 
 import org.springframework.stereotype.Component;
 
+import java.util.InputMismatchException;
+
 @Component
 public class UserDtoMapper {
-    public User assambleNewUserDao(NewUserDto newUserDto) {
+    public User assembleNewUserDao(NewUserDto newUserDto) {
+        if (newUserDto == null) {
+            throw new InputMismatchException("Failed to get new user data");
+        }
         return User.builder().name(newUserDto.getName()).email(newUserDto.getEmail()).build();
     }
 
