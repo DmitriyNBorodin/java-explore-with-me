@@ -14340,25 +14340,309 @@
 			"item": [
 				{
 					"name": "Проверка добавления новой оценки",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const main = async () => {\r",
+									"    const api = new API(pm);\r",
+									"    const rnd = new RandomUtils();\r",
+									"\r",
+									"    let rating;\r",
+									"    try {\r",
+									"        const user = await api.addUser(rnd.getUser());\r",
+									"        const user1 = await api.addUser(rnd.getUser());\r",
+									"        pm.collectionVariables.set(\"uid\", user1.id);\r",
+									"        const category = await api.addCategory(rnd.getCategory());\r",
+									"        const event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+									"        pm.collectionVariables.set(\"eid\", event.id);\r",
+									"        rating = {rating : \"1\"};\r",
+									"    } catch(err) {\r",
+									"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+									"    }\r",
+									"\r",
+									"    pm.request.body.update({\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify(rating),\r",
+									"        options: { raw: { language: 'json' } }\r",
+									"    });\r",
+									"};\r",
+									"\r",
+									"const interval = setInterval(() => {}, 1000);\r",
+									"\r",
+									"setTimeout(async () => \r",
+									"    {\r",
+									"        try {\r",
+									"            await main();\r",
+									"        } catch (e) {\r",
+									"            console.error(e);\r",
+									"        } finally {\r",
+									"            clearInterval(interval);\r",
+									"        }\r",
+									"    },  \r",
+									"    100 \r",
+									");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+									"    pm.response.to.be.ok;    \r",
+									"    pm.response.to.be.withBody;\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"const target = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Событие должно содержать полe rating\", function () {\r",
+									"pm.expect(target).to.have.property('rating');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Рейтинг события должен быть равен 1\", function () {\r",
+									"    pm.expect(target.id).to.not.be.null;\r",
+									"    pm.expect(target.rating).equal(1, 'Неверный рейтинг');\r",
+									"    });"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
-						"method": "GET",
-						"header": []
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{{request_body}}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/:userId/events/:eventId/rate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								":userId",
+								"events",
+								":eventId",
+								"rate"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{uid}}"
+								},
+								{
+									"key": "eventId",
+									"value": "{{eid}}"
+								}
+							]
+						}
 					},
 					"response": []
 				},
 				{
 					"name": "Получение пользователя с рейтингом",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const main = async () => {\r",
+									"    const api = new API(pm);\r",
+									"    const rnd = new RandomUtils();\r",
+									"\r",
+									"    let compilation;\r",
+									"    try {\r",
+									"        const user = await api.addUser(rnd.getUser());\r",
+									"        const user1 = await api.addUser(rnd.getUser());\r",
+									"        const user2 = await api.addUser(rnd.getUser());\r",
+									"        const category = await api.addCategory(rnd.getCategory());\r",
+									"        const event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+									"        pm.collectionVariables.set(\"uid\", user.id)\r",
+									"        await api.post('/users/' + user1.id + '/events/' + event.id + '/rate', {rating: \"1\"}, \"Ошибка при добавлении оценки\", verbose=null);\r",
+									"        await api.post('/users/' + user2.id + '/events/' + event.id + '/rate', {rating: \"1\"}, \"Ошибка при добавлении оценки\", verbose=null);\r",
+									"    } catch(err) {\r",
+									"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+									"    }\r",
+									"};\r",
+									"\r",
+									"const interval = setInterval(() => {}, 1000);\r",
+									"\r",
+									"setTimeout(async () => \r",
+									"    {\r",
+									"        try {\r",
+									"            await main();\r",
+									"        } catch (e) {\r",
+									"            console.error(e);\r",
+									"        } finally {\r",
+									"            clearInterval(interval);\r",
+									"        }\r",
+									"    },  \r",
+									"    100 \r",
+									");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ответ должен содержать код статуса 200 и данные в формате json\", function () {\r",
+									"    pm.response.to.be.ok;    \r",
+									"    pm.response.to.be.withBody;\r",
+									"    pm.response.to.be.json;\r",
+									"});\r",
+									"\r",
+									"const target = pm.response.json();\r",
+									"\r",
+									"pm.test(\"У пользователя должно быть полe rating\", function () {\r",
+									"pm.expect(target[0]).to.have.property('rating');\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Рейтинг пользователя должен быть равен 2\", function () {\r",
+									"    pm.expect(target[0].rating).equal(2, 'Неверный рейтинг');\r",
+									"    });"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users?ids={{uid}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"users"
+							],
+							"query": [
+								{
+									"key": "ids",
+									"value": "{{uid}}"
+								}
+							]
+						}
 					},
 					"response": []
 				},
 				{
 					"name": "Попытка оценить собственное событие",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const main = async () => {\r",
+									"    const api = new API(pm);\r",
+									"    const rnd = new RandomUtils();\r",
+									"\r",
+									"    let rating;\r",
+									"    try {\r",
+									"        const user = await api.addUser(rnd.getUser());\r",
+									"        pm.collectionVariables.set(\"uid\", user.id);\r",
+									"        const category = await api.addCategory(rnd.getCategory());\r",
+									"        let event = await api.addEvent(user.id, rnd.getEvent(category.id));\r",
+									"        pm.collectionVariables.set(\"eid\", event.id);\r",
+									"        rating = {rating : \"1\"};\r",
+									"    } catch(err) {\r",
+									"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
+									"    }\r",
+									"\r",
+									"    pm.request.body.update({\r",
+									"        mode: 'raw',\r",
+									"        raw: JSON.stringify(rating),\r",
+									"        options: { raw: { language: 'json' } }\r",
+									"    });\r",
+									"};\r",
+									"\r",
+									"const interval = setInterval(() => {}, 1000);\r",
+									"\r",
+									"setTimeout(async () => \r",
+									"    {\r",
+									"        try {\r",
+									"            await main();\r",
+									"        } catch (e) {\r",
+									"            console.error(e);\r",
+									"        } finally {\r",
+									"            clearInterval(interval);\r",
+									"        }\r",
+									"    },  \r",
+									"    100 \r",
+									");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Ответ должен содержать код статуса 409 и данные в формате json\", function () {\r",
+									"    pm.response.to.have.status(409);\r",
+									"    pm.response.to.be.withBody;\r",
+									"    pm.response.to.be.json;\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
-						"method": "GET",
-						"header": []
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{{request_body}}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/:userId/events/:eventId/rate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								":userId",
+								"events",
+								":eventId",
+								"rate"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{uid}}"
+								},
+								{
+									"key": "eventId",
+									"value": "{{eid}}"
+								}
+							]
+						}
 					},
 					"response": []
 				}
