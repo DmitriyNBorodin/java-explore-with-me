@@ -87,6 +87,8 @@ public class EventService {
             eventStream = eventStream.sorted(Comparator.comparing(EventFullDto::getEventDate).reversed());
         } else if (sort.equals(SortOption.VIEWS)) {
             eventStream = eventStream.sorted(Comparator.comparing(EventFullDto::getViews).reversed());
+        } else if (sort.equals(SortOption.RATING)) {
+            eventStream = eventStream.sorted(Comparator.comparing(EventFullDto::getRating).reversed());
         }
         List<EventShortDto> listOfEvents = eventStream.map(eventDtoMapper::convertToShortDto).toList();
         log.info("Получены события {}", listOfEvents);

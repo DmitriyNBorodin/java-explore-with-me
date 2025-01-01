@@ -16,9 +16,11 @@ import practicum.users.dto.UserDtoMapper;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -51,6 +53,7 @@ public class EventDtoMapper {
                 .requestModeration(newEventDto.getRequestModeration())
                 .state(EventState.PENDING)
                 .title(newEventDto.getTitle())
+                .rating(new HashSet<>())
                 .build();
     }
 
@@ -72,6 +75,7 @@ public class EventDtoMapper {
                 .title(event.getTitle())
                 .confirmedRequests(0)
                 .views(0L)
+                .rating(calculateRating(event.getRating()))
                 .build();
     }
 
@@ -86,6 +90,19 @@ public class EventDtoMapper {
                 .paid(event.getPaid())
                 .title(event.getTitle())
                 .views(0L)
+                .rating(calculateRating(event.getRating()))
+                .build();
+    }
+
+    public RatedEventDto assembleRatedEventDto(Event event) {
+        return RatedEventDto.builder()
+                .id(event.getId())
+                .annotation(event.getAnnotation())
+                .category(categoryDtoMapper.convertCategoryToDto(event.getCategory()))
+                .eventDate(event.getEventDate())
+                .initiator(userDtoMapper.convertToShortDto(event.getInitiator()))
+                .title(event.getTitle())
+                .rating(calculateRating(event.getRating()))
                 .build();
     }
 
@@ -229,5 +246,9 @@ public class EventDtoMapper {
                 updatingEvent.setState(EventState.CANCELED);
         }
         return updatingEvent;
+    }
+
+    private Long calculateRating(Set<EventRating> ratings) {
+        return ratings.stream().map(EventRating::getRating).mapToLong(Integer::intValue).sum();
     }
 }
