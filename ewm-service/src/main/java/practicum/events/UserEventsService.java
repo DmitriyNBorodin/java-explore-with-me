@@ -3,15 +3,17 @@ package practicum.events;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
-import practicum.categories.CategoriesService;
 import practicum.events.dto.Event;
 import practicum.events.dto.EventDtoMapper;
 import practicum.events.dto.EventFullDto;
+import practicum.events.dto.EventRating;
 import practicum.events.dto.EventRequestStatusUpdateRequest;
 import practicum.events.dto.EventRequestStatusUpdateResult;
 import practicum.events.dto.EventShortDto;
 import practicum.events.dto.NewEventDto;
+import practicum.events.dto.NewRatingDto;
 import practicum.events.dto.ParticipationRequest;
+import practicum.events.dto.RatedEventDto;
 import practicum.events.dto.UpdateEventUserRequest;
 import practicum.events.states.EventState;
 import practicum.events.states.RequestState;
@@ -31,8 +33,8 @@ import java.util.Objects;
 public class UserEventsService {
     private final EventDtoMapper eventDtoMapper;
     private final EventRepository eventRepository;
-    private final CategoriesService categoriesService;
     private final RequestsRepository requestsRepository;
+    private final RatingRepository ratingRepository;
 
     @Transactional(readOnly = true)
     public List<EventShortDto> getEventsByUser(Long userId, String from, String size) {
@@ -119,6 +121,30 @@ public class UserEventsService {
             }
         }
         return result;
+    }
+
+    @Transactional
+    public RatedEventDto rateEvent(Long userId, Long eventId, NewRatingDto rating) {
+        Event eventToRate = eventRepository.findEventById(eventId)
+                .orElseThrow(() -> new ObjectNotFoundException("Не удалось найти событие с id=" + eventId));
+        if (Objects.equals(eventToRate.getInitiator().getId(), userId)) {
+            throw new ForbiddenActionException("Attempt to rate own event");
+        }
+        log.info("Пользователь с id={} оценивает событие с id={} и ставит {}", userId, eventId, rating.getRating());
+        EventRating eventRating = EventRating.builder()
+                .userId(userId)
+                .eventId(eventId)
+                .build();
+        if (rating.getRating() > 0) {
+            eventRating.setRating(1);
+        } else {
+            eventRating.setRating(-1);
+        }
+        ratingRepository.save(eventRating);
+        eventToRate.getRating().add(eventRating);
+        RatedEventDto ratedEvent = eventDtoMapper.assembleRatedEventDto(eventToRate);
+        log.info("Новый рейтинг события с id={} равен {}", ratedEvent.getId(), ratedEvent.getRating());
+        return ratedEvent;
     }
 
     private void validateEventDate(LocalDateTime eventDate) {

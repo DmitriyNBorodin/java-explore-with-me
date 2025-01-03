@@ -12,15 +12,12 @@ import java.time.LocalDateTime;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SuperBuilder(toBuilder = true)
-public class EventShortDto {
+public class RatedEventDto {
     String annotation;
     CategoryDto category;
-    Integer confirmedRequests;
     LocalDateTime eventDate;
     Long id;
     UserShortDto initiator;
-    Boolean paid;
     String title;
-    Long views;
     Long rating;
 }

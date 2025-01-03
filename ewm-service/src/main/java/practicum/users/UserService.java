@@ -26,12 +26,13 @@ public class UserService {
         Long fromLong = Long.parseLong(from);
         Long sizeLong = Long.parseLong(size);
         List<Long> idsLong = null;
-        if (ids != null) {
+        if (ids != null && !ids.isEmpty()) {
             idsLong = ids.stream().map(Long::parseLong).toList();
         }
         List<User> requiredUsers = userRepository.getUserByIdList(idsLong, fromLong, sizeLong);
         log.info("Получены пользователи {}", requiredUsers);
-        return requiredUsers.stream().map(userDtoMapper::convertToUserDto).toList();
+        List<UserDto> requiredUsersDto = requiredUsers.stream().map(userDtoMapper::convertToUserDto).toList();
+        return userDtoMapper.assignRating(requiredUsersDto);
     }
 
     @Transactional

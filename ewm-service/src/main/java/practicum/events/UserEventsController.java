@@ -8,7 +8,9 @@ import practicum.events.dto.EventRequestStatusUpdateRequest;
 import practicum.events.dto.EventRequestStatusUpdateResult;
 import practicum.events.dto.EventShortDto;
 import practicum.events.dto.NewEventDto;
+import practicum.events.dto.NewRatingDto;
 import practicum.events.dto.ParticipationRequest;
+import practicum.events.dto.RatedEventDto;
 import practicum.events.dto.UpdateEventUserRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,5 +64,10 @@ public class UserEventsController {
     public EventRequestStatusUpdateResult updateUserEventRequests(@PathVariable Long userId, @PathVariable Long eventId,
                                                                   @RequestBody EventRequestStatusUpdateRequest updateRequest) {
         return userEventsService.updateUserEventRequests(userId, eventId, updateRequest);
+    }
+
+    @PostMapping("/{eventId}/rate")
+    public RatedEventDto rateEvent(@PathVariable Long userId, @PathVariable Long eventId, @RequestBody NewRatingDto rating) {
+        return userEventsService.rateEvent(userId, eventId, rating);
     }
 }
