@@ -39,14 +39,13 @@ public class UserDtoMapper {
 
     public List<UserDto> assignRating(List<UserDto> rawUserList) {
         List<UserRatingProjection> ratingList = userRepository.getUserRating(rawUserList.stream().map(UserDto::getId).toList());
-        if (!ratingList.isEmpty()) {
-            Map<Long, UserDto> rawUserMap = rawUserList.stream().collect(Collectors.toMap(UserDto::getId, Function.identity()));
-            for (UserRatingProjection rating : ratingList) {
-                rawUserMap.get(rating.getUserId()).setRating(rating.getUserRating());
-            }
-            return rawUserMap.values().stream().toList();
-        } else {
+        if (ratingList.isEmpty()) {
             return rawUserList;
         }
+        Map<Long, UserDto> rawUserMap = rawUserList.stream().collect(Collectors.toMap(UserDto::getId, Function.identity()));
+        for (UserRatingProjection rating : ratingList) {
+            rawUserMap.get(rating.getUserId()).setRating(rating.getUserRating());
+        }
+        return rawUserMap.values().stream().toList();
     }
 }

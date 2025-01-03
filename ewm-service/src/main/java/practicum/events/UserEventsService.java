@@ -143,7 +143,7 @@ public class UserEventsService {
         ratingRepository.save(eventRating);
         eventToRate.getRating().add(eventRating);
         RatedEventDto ratedEvent = eventDtoMapper.assembleRatedEventDto(eventToRate);
-        log.info("Новый рейтинг {}", ratedEvent.getRating());
+        log.info("Новый рейтинг события с id={} равен {}", ratedEvent.getId(), ratedEvent.getRating());
         return ratedEvent;
     }
 
