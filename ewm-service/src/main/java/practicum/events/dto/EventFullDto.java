@@ -32,4 +32,5 @@ public class EventFullDto extends EventShortDto {
     EventState state;
     String title;
     Long views;
+    Long rating;
 }
